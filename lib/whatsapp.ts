@@ -44,6 +44,9 @@ export const plantillasWhatsApp = {
     `Gracias por retirar tu ${tipoEquipo}\n\n` +
     `Comprobante N°: *${numeroComprobante}*\n\n` +
     `Esperamos que todo funcione perfectamente.\n\n` +
+    `GARANTÍA: Tu equipo cuenta con garantía por el trabajo realizado.\n\n` +
+    `Si tuviste una buena experiencia, nos ayudaría mucho que nos dejes una reseña en Google:\n` +
+    `https://g.co/kgs/8F7xMpS\n\n` +
     `Gracias por confiar en nosotros!`
 }
 

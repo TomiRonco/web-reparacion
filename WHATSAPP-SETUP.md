@@ -86,6 +86,11 @@ Comprobante N°: *000123*
 
 Esperamos que todo funcione perfectamente.
 
+GARANTÍA: Tu equipo cuenta con garantía por el trabajo realizado.
+
+Si tuviste una buena experiencia, nos ayudaría mucho que nos dejes una reseña en Google:
+https://g.co/kgs/8F7xMpS
+
 Gracias por confiar en nosotros!
 ```
 
