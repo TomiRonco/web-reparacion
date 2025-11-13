@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Check, Package, X, Download } from 'lucide-react'
 import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData } from '@/types/database'
 import { generarPDFComprobante } from '@/lib/pdf-generator'
+import { enviarWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
 import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroReparaciones'
 import PageHeader from '@/components/PageHeader'
 
@@ -112,6 +113,21 @@ export default function ReparacionesPage() {
       
       // Generar PDF automáticamente
       await generarPDFComprobante(nuevaReparacion, config)
+      
+      // Enviar notificación de WhatsApp
+      if (nuevaReparacion.cliente_celular && config?.nombre_local) {
+        const telefono = formatearTelefonoArgentino(nuevaReparacion.cliente_celular)
+        const mensaje = plantillasWhatsApp.nueva_reparacion(
+          nuevaReparacion.numero_comprobante.toString().padStart(6, '0'),
+          nuevaReparacion.producto,
+          config.nombre_local
+        )
+        
+        const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
+        if (!resultado.success) {
+          console.error('Error al enviar WhatsApp:', resultado.error)
+        }
+      }
     }
   }
 
@@ -131,6 +147,21 @@ export default function ReparacionesPage() {
     if (error) {
       alert('Error al actualizar la reparación')
       return
+    }
+
+    // Enviar notificación de WhatsApp
+    if (selectedReparacion.cliente_celular && config?.nombre_local) {
+      const telefono = formatearTelefonoArgentino(selectedReparacion.cliente_celular)
+      const mensaje = plantillasWhatsApp.modificacion(
+        selectedReparacion.numero_comprobante.toString().padStart(6, '0'),
+        'En proceso',
+        config.nombre_local
+      )
+      
+      const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
+      if (!resultado.success) {
+        console.error('Error al enviar WhatsApp:', resultado.error)
+      }
     }
 
     await fetchData()
@@ -158,6 +189,34 @@ export default function ReparacionesPage() {
     if (error) {
       alert('Error al cambiar el estado')
       return
+    }
+
+    // Enviar notificación de WhatsApp según el nuevo estado
+    const reparacion = reparaciones.find(r => r.id === id)
+    if (reparacion && reparacion.cliente_celular && config?.nombre_local) {
+      const telefono = formatearTelefonoArgentino(reparacion.cliente_celular)
+      let mensaje = ''
+      
+      if (nuevoEstado === 'finalizada') {
+        mensaje = plantillasWhatsApp.finalizada(
+          reparacion.numero_comprobante.toString().padStart(6, '0'),
+          reparacion.producto,
+          config.nombre_local
+        )
+      } else if (nuevoEstado === 'entregada') {
+        mensaje = plantillasWhatsApp.entregada(
+          reparacion.numero_comprobante.toString().padStart(6, '0'),
+          reparacion.producto,
+          config.nombre_local
+        )
+      }
+      
+      if (mensaje) {
+        const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
+        if (!resultado.success) {
+          console.error('Error al enviar WhatsApp:', resultado.error)
+        }
+      }
     }
 
     await fetchData()
