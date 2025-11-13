@@ -213,7 +213,7 @@ export default function PresupuestosPage() {
               type="text"
               value={clienteNombre}
               onChange={(e) => setClienteNombre(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
               placeholder="Juan Pérez"
             />
           </div>
@@ -226,7 +226,7 @@ export default function PresupuestosPage() {
               type="text"
               value={clienteCuit}
               onChange={(e) => setClienteCuit(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
               placeholder="20-12345678-9"
             />
           </div>
@@ -239,7 +239,7 @@ export default function PresupuestosPage() {
               type="text"
               value={clienteDireccion}
               onChange={(e) => setClienteDireccion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
               placeholder="Calle 123, Ciudad"
             />
           </div>
@@ -266,7 +266,7 @@ export default function PresupuestosPage() {
                     min="1"
                     value={item.cantidad}
                     onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                    className="w-full px-2 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
                   />
                 </div>
 
@@ -275,7 +275,7 @@ export default function PresupuestosPage() {
                     type="text"
                     value={item.detalle}
                     onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     placeholder="Descripción del servicio o producto"
                   />
                 </div>
@@ -287,13 +287,13 @@ export default function PresupuestosPage() {
                     step="0.01"
                     value={item.precio}
                     onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     placeholder="0.00"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-right font-medium">
+                  <div className="px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-md text-right font-semibold text-gray-900">
                     ${item.subtotal.toLocaleString()}
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export default function PresupuestosPage() {
               </div>
 
               {/* Vista Mobile */}
-              <div className="md:hidden border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
+              <div className="md:hidden border-2 border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-gray-700">Item #{index + 1}</span>
                   <button
@@ -325,46 +325,46 @@ export default function PresupuestosPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Detalle</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Detalle</label>
                   <input
                     type="text"
                     value={item.detalle}
                     onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     placeholder="Descripción del servicio o producto"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Cantidad</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
                     <input
                       type="number"
                       min="1"
                       value={item.cantidad}
                       onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Precio Unit.</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
                       value={item.precio}
                       onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       placeholder="0.00"
                     />
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-md p-3">
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Subtotal:</span>
-                    <span className="text-lg font-bold text-gray-900">${item.subtotal.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-gray-700">Subtotal:</span>
+                    <span className="text-lg font-bold text-blue-600">${item.subtotal.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
