@@ -118,26 +118,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="p-4 border-t border-slate-200 space-y-2">
-          <button
-            onClick={() => router.push('/dashboard/configuracion')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-              pathname === '/dashboard/configuracion'
-                ? 'bg-blue-50 text-blue-700 font-medium'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            <span>Configuración</span>
-          </button>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Cerrar Sesión</span>
-          </button>
+        <div className="p-4 border-t border-slate-200">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => router.push('/dashboard/configuracion')}
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+                pathname === '/dashboard/configuracion'
+                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              <span>Configuración</span>
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -217,29 +219,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </nav>
 
             {/* Footer del Sidebar */}
-            <div className="p-4 border-t border-slate-200 space-y-2">
-              <button
-                onClick={() => {
-                  router.push('/dashboard/configuracion')
-                  setMobileMenuOpen(false)
-                }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  pathname === '/dashboard/configuracion'
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span>Configuración</span>
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Cerrar Sesión</span>
-              </button>
+            <div className="p-4 border-t border-slate-200">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    router.push('/dashboard/configuracion')
+                    setMobileMenuOpen(false)
+                  }}
+                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+                    pathname === '/dashboard/configuracion'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Configuración</span>
+                </button>
+                
+                <button
+                  onClick={handleLogout}
+                  className="p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                  title="Cerrar Sesión"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </aside>
         </div>
