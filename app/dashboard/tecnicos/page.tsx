@@ -112,7 +112,7 @@ export default function TecnicosPage() {
               setEditingTecnico(null)
               setShowModal(true)
             }}
-            className="flex items-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold"
           >
             <Plus className="w-5 h-5" />
             <span>Agregar Técnico</span>
@@ -120,8 +120,8 @@ export default function TecnicosPage() {
         }
       />
 
-      {/* Lista de técnicos - Tabla */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Lista de técnicos - Vista Desktop (Tabla) */}
+      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -194,6 +194,66 @@ export default function TecnicosPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Lista de técnicos - Vista Mobile (Cards) */}
+      <div className="lg:hidden space-y-4">
+        {tecnicos.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center text-slate-500">
+            <div className="space-y-2">
+              <p className="text-lg font-medium">No hay técnicos registrados</p>
+              <button
+                onClick={() => setShowModal(true)}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Agregar el primer técnico
+              </button>
+            </div>
+          </div>
+        ) : (
+          tecnicos.map((tecnico) => (
+            <div key={tecnico.id} className="bg-white rounded-lg shadow p-4 space-y-3">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-lg font-bold text-slate-900">
+                    {tecnico.nombre} {tecnico.apellido}
+                  </p>
+                  <p className="text-sm text-slate-600">{tecnico.celular}</p>
+                </div>
+              </div>
+
+              {/* Fecha */}
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-slate-500">Fecha de registro</p>
+                <p className="text-sm text-slate-900">
+                  {new Date(tecnico.created_at).toLocaleDateString('es-AR')}
+                </p>
+              </div>
+
+              {/* Acciones */}
+              <div className="border-t pt-3 flex space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingTecnico(tecnico)
+                    setShowModal(true)
+                  }}
+                  className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  <span>Editar</span>
+                </button>
+                <button
+                  onClick={() => handleEliminarTecnico(tecnico.id)}
+                  className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal Agregar/Editar Técnico */}
