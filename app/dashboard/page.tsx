@@ -284,7 +284,7 @@ export default function ReparacionesPage() {
         actions={
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition shadow-md font-semibold"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition shadow-md font-semibold"
           >
             <Plus className="w-5 h-5" />
             <span>Nueva Reparación</span>
@@ -302,8 +302,8 @@ export default function ReparacionesPage() {
         />
       </div>
 
-      {/* Lista de reparaciones */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Lista de reparaciones - Vista Desktop (Tabla) */}
+      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -423,6 +423,119 @@ export default function ReparacionesPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Lista de reparaciones - Vista Mobile (Cards) */}
+      <div className="lg:hidden space-y-4">
+        {reparacionesFiltradas.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center text-slate-500">
+            {filtros.busqueda || filtros.estado !== 'todos' ? (
+              <div className="space-y-2">
+                <p className="text-lg font-medium">No se encontraron reparaciones</p>
+                <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
+              </div>
+            ) : (
+              <p>No hay reparaciones registradas</p>
+            )}
+          </div>
+        ) : (
+          reparacionesFiltradas.map((reparacion) => (
+            <div key={reparacion.id} className="bg-white rounded-lg shadow p-4 space-y-3">
+              {/* Header del Card */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Comprobante</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    #{reparacion.numero_comprobante.toString().padStart(6, '0')}
+                  </p>
+                </div>
+                <div>
+                  {getEstadoBadge(reparacion.estado)}
+                </div>
+              </div>
+
+              {/* Información del Cliente */}
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-slate-500 mb-1">Cliente</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {reparacion.cliente_nombre} {reparacion.cliente_apellido}
+                </p>
+                <p className="text-xs text-slate-600">{reparacion.cliente_celular}</p>
+              </div>
+
+              {/* Información del Producto */}
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-slate-500 mb-1">Producto</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {reparacion.producto} - {reparacion.marca}
+                </p>
+              </div>
+
+              {/* Técnico y Monto */}
+              <div className="border-t pt-3 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Técnico</p>
+                  <p className="text-sm text-slate-900">
+                    {reparacion.tecnicos ? 
+                      `${reparacion.tecnicos.nombre} ${reparacion.tecnicos.apellido}` : 
+                      '-'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-1">Monto</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {reparacion.monto ? `$${reparacion.monto.toLocaleString()}` : '-'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Acciones */}
+              <div className="border-t pt-3 flex items-center justify-between">
+                <button
+                  onClick={() => generarPDFComprobante(reparacion, config)}
+                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>PDF</span>
+                </button>
+                
+                <div className="flex space-x-2">
+                  {reparacion.estado === 'pendiente' && (
+                    <button
+                      onClick={() => {
+                        setSelectedReparacion(reparacion)
+                        setShowDiagnosticoModal(true)
+                      }}
+                      className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span>Diagnóstico</span>
+                    </button>
+                  )}
+                  {reparacion.estado === 'en_proceso' && (
+                    <button
+                      onClick={() => cambiarEstado(reparacion.id, 'finalizada')}
+                      className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-lg transition"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Finalizar</span>
+                    </button>
+                  )}
+                  {reparacion.estado === 'finalizada' && (
+                    <button
+                      onClick={() => cambiarEstado(reparacion.id, 'entregada')}
+                      className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>Entregar</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal Agregar Reparación */}

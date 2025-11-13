@@ -16,10 +16,10 @@ const gradients = {
 
 export default function PageHeader({ title, actions, gradient = 'blue' }: PageHeaderProps) {
   return (
-    <div className={`${gradients[gradient]} rounded-lg shadow-lg p-6 mb-6`}>
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">{title}</h1>
-        {actions && <div>{actions}</div>}
+    <div className={`${gradients[gradient]} rounded-lg shadow-lg p-4 sm:p-6 mb-6`}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
+        {actions && <div className="w-full sm:w-auto">{actions}</div>}
       </div>
     </div>
   )
