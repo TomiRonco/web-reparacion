@@ -159,7 +159,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar Mobile */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}>
+        <div className="lg:hidden fixed inset-0 z-40 backdrop-blur-sm bg-black/20" onClick={() => setMobileMenuOpen(false)}>
           <aside className="w-64 h-full bg-white flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header del Sidebar */}
             <div className="p-6 border-b border-slate-200">
