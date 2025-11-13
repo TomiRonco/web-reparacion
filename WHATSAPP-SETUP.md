@@ -30,53 +30,63 @@ Cuando realizas cualquiera de las acciones anteriores:
 
 ### Nueva Reparación
 ```
-🔧 *[Nombre del Local]*
+*[Nombre del Local]*
 
-✅ Hemos recibido tu [Equipo]
+Hemos recibido tu [Equipo]
 
-📋 Comprobante N°: *000123*
+Comprobante N°: *000123*
 
 Revisaremos tu equipo y te mantendremos informado del estado de la reparación.
 
-Gracias por confiar en nosotros! 🙌
+Puedes descargar tu comprobante aquí:
+[URL del PDF]
+
+Gracias por confiar en nosotros!
 ```
 
 ### Modificación (Diagnóstico agregado)
 ```
-🔧 *[Nombre del Local]*
+*[Nombre del Local]*
 
-📝 Actualización de tu reparación
+Actualización de tu reparación
 
-📋 Comprobante N°: *000123*
+Comprobante N°: *000123*
 Estado: *En proceso*
 
-Te mantendremos informado de cualquier novedad.
+DIAGNÓSTICO:
+[Descripción del problema y solución propuesta]
+
+Monto estimado: *$15,000*
+
+Por favor confirma si deseas continuar con la reparación.
+
+Quedamos atentos a tu respuesta.
 ```
 
 ### Finalizada
 ```
-🔧 *[Nombre del Local]*
+*[Nombre del Local]*
 
-✅ ¡Buenas noticias! Tu [Equipo] está listo
+Buenas noticias! Tu [Equipo] está listo
 
-📋 Comprobante N°: *000123*
+Comprobante N°: *000123*
 
 Ya puedes pasar a retirarlo en nuestro local.
 
-¡Te esperamos! 🎉
+Te esperamos!
 ```
 
 ### Entregada
 ```
-🔧 *[Nombre del Local]*
+*[Nombre del Local]*
 
-✅ Gracias por retirar tu [Equipo]
+Gracias por retirar tu [Equipo]
 
-📋 Comprobante N°: *000123*
+Comprobante N°: *000123*
 
 Esperamos que todo funcione perfectamente.
 
-¡Gracias por confiar en nosotros! 🙏
+Gracias por confiar en nosotros!
 ```
 
 ## � Requisitos

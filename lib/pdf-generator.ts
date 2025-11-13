@@ -233,3 +233,192 @@ export async function generarPDFComprobante(
   const nombreArchivo = `Comprobante_${reparacion.numero_comprobante.toString().padStart(6, '0')}_${reparacion.cliente_apellido}.pdf`
   doc.save(nombreArchivo)
 }
+
+// Función para generar el PDF como Blob (para subir a Supabase)
+export async function generarPDFBlob(
+  reparacion: Reparacion,
+  config: ConfiguracionLocal | null
+): Promise<{ blob: Blob; nombreArchivo: string }> {
+  const doc = new jsPDF()
+  
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const halfHeight = pageHeight / 2
+  
+  // Cargar logo si existe
+  let logoBase64 = ''
+  if (config?.logo_url) {
+    logoBase64 = await cargarImagenComoBase64(config.logo_url)
+  }
+  
+  // Función para dibujar una sección (original o copia) - misma que arriba
+  const dibujarSeccion = (startY: number, esOriginal: boolean) => {
+    const currentY = startY
+    let y = currentY + 10
+    
+    // Línea divisoria superior
+    if (!esOriginal) {
+      doc.setLineWidth(0.5)
+      doc.setDrawColor(150, 150, 150)
+      const dashLength = 3
+      const gapLength = 3
+      for (let i = 10; i < pageWidth - 10; i += dashLength + gapLength) {
+        doc.line(i, currentY, Math.min(i + dashLength, pageWidth - 10), currentY)
+      }
+      doc.setDrawColor(0, 0, 0)
+      doc.setLineWidth(0.2)
+    }
+    
+    // ===== HEADER CON TRES COLUMNAS =====
+    const leftMargin = 10
+    const logoSize = 20
+    const infoLocalX = leftMargin + logoSize + 5
+    const rightMargin = 10
+    const headerStartY = y
+    
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', leftMargin, headerStartY, logoSize, logoSize)
+      } catch (error) {
+        console.error('Error al agregar logo al PDF:', error)
+      }
+    }
+    
+    const logoCenterY = headerStartY + (logoSize / 2)
+    let centerY = logoCenterY - 8
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    if (config?.nombre_local) {
+      const nombreLines = doc.splitTextToSize(config.nombre_local.toUpperCase(), (pageWidth / 2) - 50)
+      doc.text(nombreLines, infoLocalX, centerY)
+      centerY += nombreLines.length * 4.5
+    } else {
+      centerY += 4.5
+    }
+    
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    
+    if (config?.ubicacion) {
+      doc.text(`Dirección: ${config.ubicacion}`, infoLocalX, centerY)
+      centerY += 4
+    }
+    if (config?.celular) {
+      doc.text(`Cel: ${config.celular}`, infoLocalX, centerY)
+      centerY += 4
+    }
+    if (config?.telefono) {
+      doc.text(`Tel: ${config.telefono}`, infoLocalX, centerY)
+      centerY += 4
+    }
+    if (config?.email) {
+      doc.text(`Email: ${config.email}`, infoLocalX, centerY)
+      centerY += 4
+    }
+    
+    let rightY = logoCenterY - 8
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.text(esOriginal ? 'ORIGINAL' : 'COPIA', pageWidth - rightMargin, rightY, { align: 'right' })
+    rightY += 6
+    
+    doc.setFontSize(10)
+    doc.text(`COMPROBANTE N° ${reparacion.numero_comprobante.toString().padStart(6, '0')}`, pageWidth - rightMargin, rightY, { align: 'right' })
+    rightY += 6
+    
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    const fechaIngreso = new Date(reparacion.fecha_ingreso)
+    doc.text(`Fecha: ${fechaIngreso.toLocaleDateString('es-AR')}`, pageWidth - rightMargin, rightY, { align: 'right' })
+    rightY += 4
+    doc.text(`Hora: ${fechaIngreso.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, pageWidth - rightMargin, rightY, { align: 'right' })
+    rightY += 4
+    
+    y = Math.max(centerY, rightY, headerStartY + logoSize) + 5
+    
+    doc.setDrawColor(200, 200, 200)
+    doc.setLineWidth(0.5)
+    doc.line(leftMargin, y, pageWidth - rightMargin, y)
+    y += 8
+    
+    const leftColumnX = leftMargin
+    let leftY = y
+    let clienteRightY = y
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('DATOS DEL CLIENTE', leftColumnX, leftY)
+    leftY += 6
+    
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Nombre: ', leftColumnX, leftY)
+    doc.setFont('helvetica', 'normal')
+    const nombreCompleto = `${reparacion.cliente_nombre} ${reparacion.cliente_apellido}`
+    doc.text(nombreCompleto, leftColumnX + 17, leftY)
+    leftY += 5
+    
+    doc.setFont('helvetica', 'bold')
+    doc.text('Celular: ', leftColumnX, leftY)
+    doc.setFont('helvetica', 'normal')
+    doc.text(reparacion.cliente_celular, leftColumnX + 17, leftY)
+    leftY += 5
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('DATOS DEL PRODUCTO', pageWidth - rightMargin, clienteRightY, { align: 'right' })
+    clienteRightY += 6
+    
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Producto: ${reparacion.producto}`, pageWidth - rightMargin, clienteRightY, { align: 'right' })
+    clienteRightY += 5
+    doc.text(`Marca: ${reparacion.marca}`, pageWidth - rightMargin, clienteRightY, { align: 'right' })
+    clienteRightY += 5
+    const cargadorTexto = reparacion.tiene_cargador ? 'SÍ' : 'NO'
+    doc.text(`Cargador: ${cargadorTexto}`, pageWidth - rightMargin, clienteRightY, { align: 'right' })
+    clienteRightY += 5
+    
+    y = Math.max(leftY, clienteRightY) + 5
+    
+    if (reparacion.observacion) {
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('OBSERVACIONES', leftMargin, y)
+      y += 6
+      
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      const obsLines = doc.splitTextToSize(reparacion.observacion, pageWidth - leftMargin - rightMargin)
+      doc.text(obsLines, leftMargin, y)
+      y += obsLines.length * 4 + 5
+    } else {
+      y += 3
+    }
+    
+    const footerY = esOriginal ? halfHeight - 15 : pageHeight - 15
+    
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'italic')
+    
+    const footerText1 = 'En caso de no ser aceptada la reparación, la revisión tiene un costo de $10,000.'
+    const footerText2 = 'La revisión puede llevar entre 2 a 3 días.'
+    const footerText3 = 'Si la reparación permanece más de 30 días en el local, los precios se actualizarán.'
+    
+    doc.text(footerText1, pageWidth / 2, footerY, { align: 'center' })
+    doc.text(footerText2, pageWidth / 2, footerY + 4, { align: 'center' })
+    doc.text(footerText3, pageWidth / 2, footerY + 8, { align: 'center' })
+  }
+  
+  // Dibujar secciones
+  dibujarSeccion(0, true)
+  dibujarSeccion(halfHeight, false)
+  
+  // Generar blob
+  const nombreArchivo = `Comprobante_${reparacion.numero_comprobante.toString().padStart(6, '0')}_${reparacion.cliente_apellido}.pdf`
+  const blob = doc.output('blob')
+  
+  return { blob, nombreArchivo }
+}

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Check, Package, X, Download } from 'lucide-react'
 import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData } from '@/types/database'
-import { generarPDFComprobante } from '@/lib/pdf-generator'
+import { generarPDFComprobante, generarPDFBlob } from '@/lib/pdf-generator'
 import { abrirWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
 import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroReparaciones'
 import PageHeader from '@/components/PageHeader'
@@ -111,16 +111,38 @@ export default function ReparacionesPage() {
       setReparaciones([nuevaReparacion, ...reparaciones])
       setShowModal(false)
       
-      // Generar PDF automáticamente
+      // Generar PDF como blob
+      const { blob, nombreArchivo } = await generarPDFBlob(nuevaReparacion, config)
+      
+      // Subir PDF a Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('comprobantes')
+        .upload(`${user.id}/${nombreArchivo}`, blob, {
+          contentType: 'application/pdf',
+          upsert: true
+        })
+      
+      let comprobanteURL = ''
+      if (!uploadError && uploadData) {
+        // Obtener URL pública del PDF
+        const { data: urlData } = supabase.storage
+          .from('comprobantes')
+          .getPublicUrl(`${user.id}/${nombreArchivo}`)
+        
+        comprobanteURL = urlData.publicUrl
+      }
+      
+      // También descargar el PDF localmente
       await generarPDFComprobante(nuevaReparacion, config)
       
-      // Enviar notificación de WhatsApp
+      // Enviar notificación de WhatsApp con link al comprobante
       if (nuevaReparacion.cliente_celular && config?.nombre_local) {
         const telefono = formatearTelefonoArgentino(nuevaReparacion.cliente_celular)
         const mensaje = plantillasWhatsApp.nueva_reparacion(
           nuevaReparacion.numero_comprobante.toString().padStart(6, '0'),
           nuevaReparacion.producto,
-          config.nombre_local
+          config.nombre_local,
+          comprobanteURL
         )
         
         abrirWhatsApp({ to: telefono, message: mensaje })
@@ -151,7 +173,8 @@ export default function ReparacionesPage() {
       const telefono = formatearTelefonoArgentino(selectedReparacion.cliente_celular)
       const mensaje = plantillasWhatsApp.modificacion(
         selectedReparacion.numero_comprobante.toString().padStart(6, '0'),
-        'En proceso',
+        formData.diagnostico,
+        formData.monto,
         config.nombre_local
       )
       

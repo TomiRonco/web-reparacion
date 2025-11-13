@@ -8,33 +8,43 @@ export interface WhatsAppMessage {
 
 // Plantillas de mensajes para cada estado
 export const plantillasWhatsApp = {
-  nueva_reparacion: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string) => 
-    `🔧 *${nombreLocal}*\n\n` +
-    `✅ Hemos recibido tu ${tipoEquipo}\n\n` +
-    `📋 Comprobante N°: *${numeroComprobante}*\n\n` +
-    `Revisaremos tu equipo y te mantendremos informado del estado de la reparación.\n\n` +
-    `Gracias por confiar en nosotros! 🙌`,
+  nueva_reparacion: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string, comprobanteURL?: string) => {
+    let mensaje = `*${nombreLocal}*\n\n` +
+      `Hemos recibido tu ${tipoEquipo}\n\n` +
+      `Comprobante N°: *${numeroComprobante}*\n\n` +
+      `Revisaremos tu equipo y te mantendremos informado del estado de la reparación.\n\n`
+    
+    if (comprobanteURL) {
+      mensaje += `Puedes descargar tu comprobante aquí:\n${comprobanteURL}\n\n`
+    }
+    
+    mensaje += `Gracias por confiar en nosotros!`
+    return mensaje
+  },
 
-  modificacion: (numeroComprobante: string, nuevoEstado: string, nombreLocal: string) =>
-    `🔧 *${nombreLocal}*\n\n` +
-    `📝 Actualización de tu reparación\n\n` +
-    `📋 Comprobante N°: *${numeroComprobante}*\n` +
-    `Estado: *${nuevoEstado}*\n\n` +
-    `Te mantendremos informado de cualquier novedad.`,
+  modificacion: (numeroComprobante: string, diagnostico: string, monto: number, nombreLocal: string) =>
+    `*${nombreLocal}*\n\n` +
+    `Actualización de tu reparación\n\n` +
+    `Comprobante N°: *${numeroComprobante}*\n` +
+    `Estado: *En proceso*\n\n` +
+    `DIAGNÓSTICO:\n${diagnostico}\n\n` +
+    `Monto estimado: *$${monto.toLocaleString('es-AR')}*\n\n` +
+    `Por favor confirma si deseas continuar con la reparación.\n\n` +
+    `Quedamos atentos a tu respuesta.`,
 
   finalizada: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string) =>
-    `🔧 *${nombreLocal}*\n\n` +
-    `✅ ¡Buenas noticias! Tu ${tipoEquipo} está listo\n\n` +
-    `📋 Comprobante N°: *${numeroComprobante}*\n\n` +
+    `*${nombreLocal}*\n\n` +
+    `Buenas noticias! Tu ${tipoEquipo} está listo\n\n` +
+    `Comprobante N°: *${numeroComprobante}*\n\n` +
     `Ya puedes pasar a retirarlo en nuestro local.\n\n` +
-    `¡Te esperamos! 🎉`,
+    `Te esperamos!`,
 
   entregada: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string) =>
-    `🔧 *${nombreLocal}*\n\n` +
-    `✅ Gracias por retirar tu ${tipoEquipo}\n\n` +
-    `📋 Comprobante N°: *${numeroComprobante}*\n\n` +
+    `*${nombreLocal}*\n\n` +
+    `Gracias por retirar tu ${tipoEquipo}\n\n` +
+    `Comprobante N°: *${numeroComprobante}*\n\n` +
     `Esperamos que todo funcione perfectamente.\n\n` +
-    `¡Gracias por confiar en nosotros! 🙏`
+    `Gracias por confiar en nosotros!`
 }
 
 // Función para abrir WhatsApp Web con el mensaje predefinido
