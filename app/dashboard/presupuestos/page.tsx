@@ -1,0 +1,562 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import PageHeader from '@/components/PageHeader'
+import { generarPDFPresupuesto } from '@/lib/pdf-presupuesto'
+import type { Presupuesto, PresupuestoItem, ConfiguracionLocal } from '@/types/database'
+import { Plus, X, Download, Trash2 } from 'lucide-react'
+
+export default function PresupuestosPage() {
+  const supabase = createClient()
+  const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
+  const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Form state
+  const [clienteNombre, setClienteNombre] = useState('')
+  const [clienteCuit, setClienteCuit] = useState('')
+  const [clienteDireccion, setClienteDireccion] = useState('')
+  const [items, setItems] = useState<PresupuestoItem[]>([
+    { cantidad: 1, detalle: '', precio: 0, subtotal: 0 }
+  ])
+
+  const cargarDatos = useCallback(async () => {
+    try {
+      setLoading(true)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = '/login'
+        return
+      }
+
+      // Cargar configuración
+      const { data: configData } = await supabase
+        .from('configuracion_local')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      setConfig(configData)
+
+      // Cargar presupuestos
+      const { data: presupuestosData, error } = await supabase
+        .from('presupuestos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('numero_presupuesto', { ascending: false })
+
+      if (error) {
+        console.error('Error al cargar presupuestos:', error)
+        return
+      }
+
+      setPresupuestos(presupuestosData || [])
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    cargarDatos()
+  }, [cargarDatos])
+
+  // Agregar nuevo item
+  const agregarItem = () => {
+    setItems([...items, { cantidad: 1, detalle: '', precio: 0, subtotal: 0 }])
+  }
+
+  // Eliminar item
+  const eliminarItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index))
+    }
+  }
+
+  // Actualizar item
+  const actualizarItem = (index: number, field: keyof PresupuestoItem, value: string | number) => {
+    const nuevosItems = [...items]
+    
+    if (field === 'cantidad' || field === 'precio') {
+      nuevosItems[index][field] = Number(value)
+    } else if (field === 'detalle') {
+      nuevosItems[index][field] = value.toString()
+    }
+
+    // Recalcular subtotal
+    nuevosItems[index].subtotal = nuevosItems[index].cantidad * nuevosItems[index].precio
+
+    setItems(nuevosItems)
+  }
+
+  // Calcular total
+  const calcularTotal = () => {
+    return items.reduce((total, item) => total + item.subtotal, 0)
+  }
+
+  // Guardar presupuesto
+  const guardarPresupuesto = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Validar que haya al menos un item con detalle
+      const itemsValidos = items.filter(item => item.detalle.trim() !== '')
+      if (itemsValidos.length === 0) {
+        alert('Debe agregar al menos un item con detalle')
+        return
+      }
+
+      // Obtener el siguiente número de presupuesto
+      const { data: ultimoPresupuesto } = await supabase
+        .from('presupuestos')
+        .select('numero_presupuesto')
+        .eq('user_id', user.id)
+        .order('numero_presupuesto', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nuevoNumero = (ultimoPresupuesto?.numero_presupuesto || 0) + 1
+
+      // Crear presupuesto
+      const nuevoPresupuesto = {
+        user_id: user.id,
+        numero_presupuesto: nuevoNumero,
+        cliente_nombre: clienteNombre.trim() || null,
+        cliente_cuit: clienteCuit.trim() || null,
+        cliente_direccion: clienteDireccion.trim() || null,
+        items: itemsValidos,
+        total: calcularTotal(),
+        fecha_creacion: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('presupuestos')
+        .insert(nuevoPresupuesto)
+
+      if (error) {
+        console.error('Error al guardar presupuesto:', error)
+        alert('Error al guardar el presupuesto')
+        return
+      }
+
+      // Limpiar formulario
+      limpiarFormulario()
+      
+      // Recargar lista
+      await cargarDatos()
+
+      alert('Presupuesto guardado exitosamente')
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al guardar el presupuesto')
+    }
+  }
+
+  // Limpiar formulario
+  const limpiarFormulario = () => {
+    setClienteNombre('')
+    setClienteCuit('')
+    setClienteDireccion('')
+    setItems([{ cantidad: 1, detalle: '', precio: 0, subtotal: 0 }])
+  }
+
+  // Generar PDF de un presupuesto guardado
+  const descargarPDF = async (presupuesto: Presupuesto) => {
+    await generarPDFPresupuesto(presupuesto, config)
+  }
+
+  // Eliminar presupuesto
+  const eliminarPresupuesto = async (id: string) => {
+    if (!confirm('¿Está seguro de eliminar este presupuesto?')) return
+
+    const { error } = await supabase
+      .from('presupuestos')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error al eliminar presupuesto:', error)
+      alert('Error al eliminar el presupuesto')
+      return
+    }
+
+    await cargarDatos()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Presupuestos" gradient="green" />
+
+      {/* Formulario de nuevo presupuesto */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Nuevo Presupuesto</h2>
+
+        {/* Datos del cliente (opcionales) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Cliente (opcional)
+            </label>
+            <input
+              type="text"
+              value={clienteNombre}
+              onChange={(e) => setClienteNombre(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Juan Pérez"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              CUIT (opcional)
+            </label>
+            <input
+              type="text"
+              value={clienteCuit}
+              onChange={(e) => setClienteCuit(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="20-12345678-9"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Dirección (opcional)
+            </label>
+            <input
+              type="text"
+              value={clienteDireccion}
+              onChange={(e) => setClienteDireccion(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Calle 123, Ciudad"
+            />
+          </div>
+        </div>
+
+        {/* Tabla de items */}
+        <div className="space-y-3 mb-4">
+          {/* Headers Desktop */}
+          <div className="hidden md:grid grid-cols-12 gap-2 text-sm font-medium text-gray-700 px-2">
+            <div className="col-span-1">Cant.</div>
+            <div className="col-span-6">Detalle</div>
+            <div className="col-span-2">Precio Unit.</div>
+            <div className="col-span-2">Subtotal</div>
+            <div className="col-span-1"></div>
+          </div>
+
+          {items.map((item, index) => (
+            <div key={index}>
+              {/* Vista Desktop */}
+              <div className="hidden md:grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-1">
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.cantidad}
+                    onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                  />
+                </div>
+
+                <div className="col-span-6">
+                  <input
+                    type="text"
+                    value={item.detalle}
+                    onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Descripción del servicio o producto"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.precio}
+                    onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-right font-medium">
+                    ${item.subtotal.toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="col-span-1">
+                  <button
+                    onClick={() => eliminarItem(index)}
+                    disabled={items.length === 1}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Eliminar item"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Vista Mobile */}
+              <div className="md:hidden border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Item #{index + 1}</span>
+                  <button
+                    onClick={() => eliminarItem(index)}
+                    disabled={items.length === 1}
+                    className="p-1 text-red-600 hover:bg-red-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Eliminar item"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Detalle</label>
+                  <input
+                    type="text"
+                    value={item.detalle}
+                    onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Descripción del servicio o producto"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Cantidad</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.cantidad}
+                      onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Precio Unit.</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.precio}
+                      onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-md p-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-600">Subtotal:</span>
+                    <span className="text-lg font-bold text-gray-900">${item.subtotal.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={agregarItem}
+          className="flex items-center space-x-2 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md transition-colors mb-4"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Agregar Item</span>
+        </button>
+
+        {/* Total */}
+        <div className="flex justify-end items-center mb-6 pt-4 border-t border-gray-200">
+          <div className="text-right">
+            <p className="text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-2xl font-bold text-gray-900">
+              ${calcularTotal().toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+          <button
+            onClick={guardarPresupuesto}
+            className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
+          >
+            Guardar Presupuesto
+          </button>
+          <button
+            onClick={limpiarFormulario}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      {/* Lista de presupuestos guardados */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Presupuestos Guardados</h2>
+
+        {presupuestos.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">
+            No hay presupuestos guardados
+          </p>
+        ) : (
+          <>
+            {/* Vista Desktop (Tabla) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      N°
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cliente
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Items
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Fecha
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {presupuestos.map((presupuesto) => (
+                    <tr key={presupuesto.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900">
+                          #{presupuesto.numero_presupuesto.toString().padStart(6, '0')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900">
+                          {presupuesto.cliente_nombre || '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-600">
+                          {presupuesto.items.length} {presupuesto.items.length === 1 ? 'item' : 'items'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900">
+                          ${presupuesto.total.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-600">
+                          {new Date(presupuesto.fecha_creacion).toLocaleDateString('es-AR')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => descargarPDF(presupuesto)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          title="Descargar PDF"
+                        >
+                          <Download className="w-5 h-5 inline" />
+                        </button>
+                        <button
+                          onClick={() => eliminarPresupuesto(presupuesto.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-5 h-5 inline" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Vista Mobile (Cards) */}
+            <div className="lg:hidden space-y-4">
+              {presupuestos.map((presupuesto) => (
+                <div
+                  key={presupuesto.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Presupuesto</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        #{presupuesto.numero_presupuesto.toString().padStart(6, '0')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-1">Total</p>
+                      <p className="text-lg font-bold text-green-600">
+                        ${presupuesto.total.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Cliente:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {presupuesto.cliente_nombre || 'Sin especificar'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Items:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {presupuesto.items.length} {presupuesto.items.length === 1 ? 'item' : 'items'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Fecha:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {new Date(presupuesto.fecha_creacion).toLocaleDateString('es-AR')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => descargarPDF(presupuesto)}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="text-sm font-medium">Descargar PDF</span>
+                    </button>
+                    <button
+                      onClick={() => eliminarPresupuesto(presupuesto.id)}
+                      className="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

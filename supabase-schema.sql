@@ -64,10 +64,36 @@ CREATE TABLE IF NOT EXISTS reparaciones (
   UNIQUE(user_id, numero_comprobante)
 );
 
+-- Crear tabla de presupuestos
+CREATE TABLE IF NOT EXISTS presupuestos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  numero_presupuesto INTEGER NOT NULL,
+  
+  -- Datos del cliente (opcionales)
+  cliente_nombre TEXT,
+  cliente_cuit TEXT,
+  cliente_direccion TEXT,
+  
+  -- Items del presupuesto (JSON array)
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  
+  -- Total calculado
+  total DECIMAL(10, 2) NOT NULL DEFAULT 0,
+  
+  -- Fechas
+  fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(user_id, numero_presupuesto)
+);
+
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE configuracion_local ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tecnicos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reparaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE presupuestos ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS para configuracion_local
 CREATE POLICY "Los usuarios pueden ver su propia configuración"
@@ -116,6 +142,23 @@ CREATE POLICY "Los usuarios pueden eliminar sus propias reparaciones"
   ON reparaciones FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Políticas RLS para presupuestos
+CREATE POLICY "Los usuarios pueden ver sus propios presupuestos"
+  ON presupuestos FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden insertar sus propios presupuestos"
+  ON presupuestos FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden actualizar sus propios presupuestos"
+  ON presupuestos FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden eliminar sus propios presupuestos"
+  ON presupuestos FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -141,6 +184,11 @@ CREATE TRIGGER update_reparaciones_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_presupuestos_updated_at
+  BEFORE UPDATE ON presupuestos
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- Índices para mejorar rendimiento
 CREATE INDEX idx_configuracion_local_user_id ON configuracion_local(user_id);
 CREATE INDEX idx_tecnicos_user_id ON tecnicos(user_id);
@@ -148,3 +196,5 @@ CREATE INDEX idx_reparaciones_user_id ON reparaciones(user_id);
 CREATE INDEX idx_reparaciones_estado ON reparaciones(estado);
 CREATE INDEX idx_reparaciones_numero_comprobante ON reparaciones(numero_comprobante);
 CREATE INDEX idx_reparaciones_tecnico_id ON reparaciones(tecnico_id);
+CREATE INDEX idx_presupuestos_user_id ON presupuestos(user_id);
+CREATE INDEX idx_presupuestos_numero_presupuesto ON presupuestos(numero_presupuesto);

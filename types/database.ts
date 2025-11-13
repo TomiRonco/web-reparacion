@@ -102,3 +102,40 @@ export interface Estadisticas {
     cantidad: number
   }[]
 }
+
+// Tipos para Presupuestos
+export interface PresupuestoItem {
+  cantidad: number
+  detalle: string
+  precio: number
+  subtotal: number
+}
+
+export interface Presupuesto {
+  id: string
+  user_id: string
+  numero_presupuesto: number
+  
+  // Datos del cliente (opcionales)
+  cliente_nombre: string | null
+  cliente_cuit: string | null
+  cliente_direccion: string | null
+  
+  // Items del presupuesto
+  items: PresupuestoItem[]
+  
+  // Total
+  total: number
+  
+  // Fechas
+  fecha_creacion: string
+  created_at: string
+  updated_at: string
+}
+
+export interface PresupuestoFormData {
+  cliente_nombre: string
+  cliente_cuit: string
+  cliente_direccion: string
+  items: PresupuestoItem[]
+}
