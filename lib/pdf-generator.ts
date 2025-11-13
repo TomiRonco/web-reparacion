@@ -18,10 +18,11 @@ async function cargarImagenComoBase64(url: string): Promise<string> {
   }
 }
 
-export async function generarPDFComprobante(
+// Función interna para generar el documento PDF
+async function generarDocumentoPDF(
   reparacion: Reparacion,
   config: ConfiguracionLocal | null
-) {
+): Promise<jsPDF> {
   const doc = new jsPDF()
   
   const pageWidth = doc.internal.pageSize.getWidth()
