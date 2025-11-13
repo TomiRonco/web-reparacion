@@ -32,12 +32,19 @@ export const plantillasWhatsApp = {
     `Por favor confirma si deseas continuar con la reparación.\n\n` +
     `Quedamos atentos a tu respuesta.`,
 
-  finalizada: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string) =>
-    `*${nombreLocal}*\n\n` +
-    `Buenas noticias! Tu ${tipoEquipo} está listo\n\n` +
-    `Comprobante N°: *${numeroComprobante}*\n\n` +
-    `Ya puedes pasar a retirarlo en nuestro local.\n\n` +
-    `Te esperamos!`,
+  finalizada: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string, horarios?: string) => {
+    let mensaje = `*${nombreLocal}*\n\n` +
+      `Buenas noticias! Tu ${tipoEquipo} está listo\n\n` +
+      `Comprobante N°: *${numeroComprobante}*\n\n` +
+      `Ya puedes pasar a retirarlo en nuestro local.\n\n`
+    
+    if (horarios) {
+      mensaje += `Recordá nuestros horarios:\n${horarios}\n\n`
+    }
+    
+    mensaje += `Te esperamos!`
+    return mensaje
+  },
 
   entregada: (numeroComprobante: string, tipoEquipo: string, nombreLocal: string) =>
     `*${nombreLocal}*\n\n` +

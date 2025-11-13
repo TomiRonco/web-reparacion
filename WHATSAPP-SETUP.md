@@ -73,6 +73,10 @@ Comprobante N°: *000123*
 
 Ya puedes pasar a retirarlo en nuestro local.
 
+Recordá nuestros horarios:
+Lunes a Viernes: 9:00 - 18:00
+Sábados: 9:00 - 13:00
+
 Te esperamos!
 ```
 

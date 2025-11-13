@@ -218,7 +218,8 @@ export default function ReparacionesPage() {
         mensaje = plantillasWhatsApp.finalizada(
           reparacion.numero_comprobante.toString().padStart(6, '0'),
           reparacion.producto,
-          config.nombre_local
+          config.nombre_local,
+          config.horarios || undefined
         )
       } else if (nuevoEstado === 'entregada') {
         mensaje = plantillasWhatsApp.entregada(
