@@ -1,5 +1,5 @@
 // Servicio de notificaciones de WhatsApp
-// Utilizaremos la API de Twilio para enviar mensajes
+// Abre WhatsApp Web con el mensaje predefinido
 
 export interface WhatsAppMessage {
   to: string // Número de teléfono con código de país (ej: +5493415071726)
@@ -37,36 +37,35 @@ export const plantillasWhatsApp = {
     `¡Gracias por confiar en nosotros! 🙏`
 }
 
-// Función para enviar mensaje de WhatsApp usando Twilio
-export async function enviarWhatsApp(data: WhatsAppMessage): Promise<{ success: boolean; error?: string }> {
+// Función para abrir WhatsApp Web con el mensaje predefinido
+export function abrirWhatsApp(data: WhatsAppMessage): void {
   try {
     // Validar que el número tenga el formato correcto
-    const phoneNumber = data.to.startsWith('+') ? data.to : `+54${data.to}`
+    let phoneNumber = data.to.replace(/[\s\-\(\)]/g, '') // Remover espacios y caracteres
     
-    const response = await fetch('/api/whatsapp/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: phoneNumber,
-        message: data.message,
-      }),
-    })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Error al enviar WhatsApp')
+    // Si empieza con 0, removerlo
+    if (phoneNumber.startsWith('0')) {
+      phoneNumber = phoneNumber.substring(1)
     }
-
-    return { success: true }
+    
+    // Si no tiene código de país, agregar 54 (Argentina)
+    if (!phoneNumber.startsWith('54') && !phoneNumber.startsWith('+')) {
+      phoneNumber = '54' + phoneNumber
+    }
+    
+    // Remover el + si existe (la URL no lo necesita)
+    phoneNumber = phoneNumber.replace('+', '')
+    
+    // Codificar el mensaje para URL
+    const mensajeCodificado = encodeURIComponent(data.message)
+    
+    // Crear la URL de WhatsApp Web
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${mensajeCodificado}`
+    
+    // Abrir en una nueva pestaña
+    window.open(whatsappURL, '_blank')
   } catch (error) {
-    console.error('Error al enviar WhatsApp:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    }
+    console.error('Error al abrir WhatsApp:', error)
   }
 }
 

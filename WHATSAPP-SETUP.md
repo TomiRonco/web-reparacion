@@ -1,56 +1,30 @@
-# Configuración de Notificaciones de WhatsApp
+# Notificaciones de WhatsApp (Manual)
 
-Este proyecto utiliza **Twilio** para enviar notificaciones automáticas de WhatsApp a los clientes en diferentes estados de la reparación.
+Este proyecto incluye un sistema de notificaciones de WhatsApp que **abre automáticamente WhatsApp Web** con el mensaje predefinido para que lo envíes manualmente.
 
-## 📋 Estados que Envían Notificaciones
+## 📋 Estados que Generan Notificaciones
 
-1. **Nueva Reparación** - Cuando se crea una nueva orden de reparación
-2. **Modificación** - Cuando se agrega el diagnóstico y pasa a "En proceso"
+1. **Nueva Reparación** - Al crear una nueva orden de reparación
+2. **Modificación** - Al agregar diagnóstico (pasa a "En proceso")
 3. **Finalizada** - Cuando la reparación está lista para retirar
 4. **Entregada** - Cuando el cliente retira su equipo
 
-## 🔧 Configuración de Twilio
+## � Cómo Funciona
 
-### Paso 1: Crear Cuenta en Twilio
+Cuando realizas cualquiera de las acciones anteriores:
 
-1. Visita [https://www.twilio.com/try-twilio](https://www.twilio.com/try-twilio)
-2. Crea una cuenta gratuita (incluye crédito de prueba)
-3. Verifica tu número de teléfono
+1. Se abre automáticamente una nueva pestaña de WhatsApp Web
+2. El mensaje ya está escrito y personalizado con los datos del cliente
+3. **Solo tienes que hacer click en "Enviar"** ✅
+4. El número del cliente ya está seleccionado automáticamente
 
-### Paso 2: Configurar WhatsApp Sandbox
+## 📱 Ventajas de Este Sistema
 
-1. En el dashboard de Twilio, ve a **Messaging** > **Try it out** > **Send a WhatsApp message**
-2. Sigue las instrucciones para activar el Sandbox:
-   - Envía el código que te dan a un número de WhatsApp
-   - Por ejemplo: "join [código]" al número +1 415 523 8886
-3. Anota el número de WhatsApp de Twilio (formato: `whatsapp:+14155238886`)
-
-### Paso 3: Obtener Credenciales
-
-1. En el dashboard de Twilio, ve a **Account** > **API keys & tokens**
-2. Copia tu **Account SID**
-3. Copia tu **Auth Token**
-
-### Paso 4: Configurar Variables de Entorno
-
-Crea o edita el archivo `.env.local` en la raíz del proyecto:
-
-```bash
-# Twilio WhatsApp
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_auth_token_here
-TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
-```
-
-## 📱 Formato de Números de Teléfono
-
-Los números se formatean automáticamente para Argentina:
-- Si empieza con `0`, se elimina
-- Si no tiene código de país, se agrega `+54`
-- Ejemplos:
-  - `3415071726` → `+543415071726`
-  - `03415071726` → `+543415071726`
-  - `+543415071726` → `+543415071726`
+✅ **Gratis** - No requiere API de pago ni suscripciones
+✅ **Simple** - No necesitas configurar nada en Twilio
+✅ **Control** - Tú decides si envías o no el mensaje
+✅ **Personalizable** - Puedes editar el mensaje antes de enviar
+✅ **Sin límites** - Envía tantos mensajes como quieras
 
 ## 📨 Plantillas de Mensajes
 
@@ -105,64 +79,69 @@ Esperamos que todo funcione perfectamente.
 ¡Gracias por confiar en nosotros! 🙏
 ```
 
-## 🚀 Producción
+## � Requisitos
 
-Para usar WhatsApp en producción (no sandbox):
+- Tener WhatsApp instalado en tu teléfono
+- Tener WhatsApp Web vinculado a tu cuenta
+- Permitir que el navegador abra WhatsApp Web
 
-1. **Solicitar Acceso a la API de WhatsApp Business**
-   - En Twilio, ve a **Messaging** > **WhatsApp** > **Request Access**
-   - Completa el formulario de solicitud
-   - Espera la aprobación (puede tomar varios días)
+## 📝 Formato de Números
 
-2. **Verificar tu Negocio**
-   - Necesitarás verificar tu negocio con Facebook
-   - Proporcionar documentación legal de tu empresa
+El sistema formatea automáticamente los números argentinos:
+- `3415071726` → Se convierte en formato internacional
+- `03415071726` → Se elimina el 0 y se formatea
+- El código de país (+54) se agrega automáticamente
 
-3. **Configurar Plantillas Aprobadas**
-   - Las plantillas de mensajes deben ser aprobadas por WhatsApp
-   - Envía tus plantillas para revisión en el dashboard de Twilio
+## 💡 Consejos de Uso
 
-4. **Actualizar el Número de WhatsApp**
-   - Una vez aprobado, actualiza `TWILIO_WHATSAPP_NUMBER` con tu número oficial
+1. **Mantén WhatsApp Web abierto** durante tu jornada laboral
+2. **Revisa el mensaje** antes de enviarlo (puedes editarlo)
+3. **Cierra las pestañas** después de enviar cada mensaje
+4. **Verifica el número** del cliente antes de enviar
 
-## 💰 Costos
+## � Flujo Completo
 
-- **Sandbox (Pruebas)**: Gratuito (usa el crédito de prueba)
-- **Producción**: 
-  - WhatsApp Business API: ~$0.005 - $0.02 por mensaje (varía por país)
-  - Twilio incluye $15 de crédito gratuito al registrarte
+```
+1. Usuario crea una reparación
+   ↓
+2. Se genera el PDF del comprobante
+   ↓
+3. Se abre WhatsApp Web automáticamente
+   ↓
+4. Mensaje pre-llenado con datos del cliente
+   ↓
+5. Tú haces click en "Enviar"
+   ↓
+6. Cliente recibe la notificación ✅
+```
 
-## 🔍 Testing
+## 🎨 Personalización
 
-Para probar las notificaciones en desarrollo:
+Para modificar las plantillas de mensajes, edita el archivo:
+`/lib/whatsapp.ts`
 
-1. Activa el Sandbox de WhatsApp
-2. Envía el código de activación desde tu WhatsApp
-3. Crea una reparación de prueba con tu número de teléfono
-4. Verifica que recibas el mensaje
+Las plantillas están en el objeto `plantillasWhatsApp` y puedes cambiar:
+- Emojis
+- Textos
+- Formato
+- Agregar información adicional
 
 ## 🐛 Troubleshooting
 
-### No llegan los mensajes
+### No se abre WhatsApp Web
 
-1. Verifica que las credenciales sean correctas en `.env.local`
-2. Asegúrate de haber activado el Sandbox
-3. Revisa que el número tenga el formato correcto
-4. Verifica los logs en la consola del navegador
-5. Revisa los logs de Twilio en su dashboard
+- Verifica que tu navegador permita abrir pop-ups
+- Asegúrate de que WhatsApp Web esté vinculado
+- Prueba con otro navegador (Chrome funciona mejor)
 
-### Error de autenticación
+### Número incorrecto
 
-- Verifica que `TWILIO_ACCOUNT_SID` y `TWILIO_AUTH_TOKEN` sean correctos
-- Regenera el Auth Token si es necesario
+- Verifica que el número del cliente esté completo
+- Debe tener 10 dígitos (sin el 0 inicial)
+- Ejemplo válido: `3415071726`
 
-### Formato de número incorrecto
+### Mensaje vacío
 
-- Usa el formato internacional: `+[código país][número]`
-- Para Argentina: `+54` seguido del número sin el `0` inicial
+- Verifica que la configuración del local esté completa
+- El nombre del local es necesario para las plantillas
 
-## 📚 Recursos
-
-- [Documentación de Twilio WhatsApp](https://www.twilio.com/docs/whatsapp)
-- [Twilio Console](https://console.twilio.com/)
-- [Pricing de WhatsApp](https://www.twilio.com/whatsapp/pricing)

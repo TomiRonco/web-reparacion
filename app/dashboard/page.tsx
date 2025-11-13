@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Check, Package, X, Download } from 'lucide-react'
 import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData } from '@/types/database'
 import { generarPDFComprobante } from '@/lib/pdf-generator'
-import { enviarWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
+import { abrirWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
 import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroReparaciones'
 import PageHeader from '@/components/PageHeader'
 
@@ -123,10 +123,7 @@ export default function ReparacionesPage() {
           config.nombre_local
         )
         
-        const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
-        if (!resultado.success) {
-          console.error('Error al enviar WhatsApp:', resultado.error)
-        }
+        abrirWhatsApp({ to: telefono, message: mensaje })
       }
     }
   }
@@ -158,10 +155,7 @@ export default function ReparacionesPage() {
         config.nombre_local
       )
       
-      const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
-      if (!resultado.success) {
-        console.error('Error al enviar WhatsApp:', resultado.error)
-      }
+      abrirWhatsApp({ to: telefono, message: mensaje })
     }
 
     await fetchData()
@@ -212,10 +206,7 @@ export default function ReparacionesPage() {
       }
       
       if (mensaje) {
-        const resultado = await enviarWhatsApp({ to: telefono, message: mensaje })
-        if (!resultado.success) {
-          console.error('Error al enviar WhatsApp:', resultado.error)
-        }
+        abrirWhatsApp({ to: telefono, message: mensaje })
       }
     }
 
