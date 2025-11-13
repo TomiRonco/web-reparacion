@@ -89,7 +89,7 @@ Esperamos que todo funcione perfectamente.
 GARANTÍA: Tu equipo cuenta con garantía por el trabajo realizado.
 
 Si tuviste una buena experiencia, nos ayudaría mucho que nos dejes una reseña en Google:
-https://g.co/kgs/8F7xMpS
+https://www.google.com/search?q=byt+computacion&rlz=1C5CHFA_enAR1180AR1181&oq=byt&gs_lcrp=EgZjaHJvbWUqDwgAECMYJxjjAhiABBiKBTIPCAAQIxgnGOMCGIAEGIoFMhUIARAuGCcYrwEYxwEYgAQYigUYjgUyDggCEEUYORhDGIAEGIoFMgYIAxBFGEAyBggEEEUYPTIGCAUQRRg9MgYIBhBFGD0yBggHEEUYPNIBBzk1NmowajeoAgiwAgHxBSITv2XQgPQR&sourceid=chrome&ie=UTF-8#
 
 Gracias por confiar en nosotros!
 ```

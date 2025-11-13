@@ -46,7 +46,7 @@ export const plantillasWhatsApp = {
     `Esperamos que todo funcione perfectamente.\n\n` +
     `GARANTÍA: Tu equipo cuenta con garantía por el trabajo realizado.\n\n` +
     `Si tuviste una buena experiencia, nos ayudaría mucho que nos dejes una reseña en Google:\n` +
-    `https://g.co/kgs/8F7xMpS\n\n` +
+    `https://www.google.com/search?q=byt+computacion&rlz=1C5CHFA_enAR1180AR1181&oq=byt&gs_lcrp=EgZjaHJvbWUqDwgAECMYJxjjAhiABBiKBTIPCAAQIxgnGOMCGIAEGIoFMhUIARAuGCcYrwEYxwEYgAQYigUYjgUyDggCEEUYORhDGIAEGIoFMgYIAxBFGEAyBggEEEUYPTIGCAUQRRg9MgYIBhBFGD0yBggHEEUYPNIBBzk1NmowajeoAgiwAgHxBSITv2XQgPQR&sourceid=chrome&ie=UTF-8#\n\n` +
     `Gracias por confiar en nosotros!`
 }
 
