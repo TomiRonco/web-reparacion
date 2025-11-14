@@ -21,19 +21,14 @@ export async function generateMetadata(): Promise<Metadata> {
     .single()
 
   const nombreLocal = config?.nombre_local || 'Sistema de Reparaciones'
-  const logoUrl = config?.logo_url
 
   const metadata: Metadata = {
     title: nombreLocal,
     description: `Sistema de gestión de reparaciones - ${nombreLocal}`,
-  }
-
-  // Si hay logo, usarlo como favicon
-  if (logoUrl) {
-    metadata.icons = {
-      icon: logoUrl,
-      apple: logoUrl,
-    }
+    icons: {
+      icon: '/api/favicon',
+      apple: '/api/favicon',
+    },
   }
 
   return metadata
