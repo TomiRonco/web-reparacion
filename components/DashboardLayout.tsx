@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import type { ConfiguracionLocal } from '@/types/database'
+import DynamicFavicon from './DynamicFavicon'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -63,6 +64,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen bg-slate-50">
+      {/* Componente para actualizar favicon dinámicamente */}
+      <DynamicFavicon />
+      
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r border-slate-200">
         {/* Header del Sidebar */}
