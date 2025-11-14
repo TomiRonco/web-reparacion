@@ -36,9 +36,10 @@ export async function generarPDFPresupuesto(
   }
 
   // ===== HEADER =====
-  const logoSize = 20
+  const logoSize = 25
+  const headerHeight = 30
   
-  // Logo (izquierda)
+  // Logo (izquierda) - centrado verticalmente
   if (logoBase64) {
     try {
       doc.addImage(logoBase64, 'PNG', leftMargin, y, logoSize, logoSize)
@@ -47,11 +48,13 @@ export async function generarPDFPresupuesto(
     }
   }
 
-  // Información del local (centro)
+  // Información del local (centro) - centrado verticalmente
+  const centerY = y + (headerHeight / 2)
+  
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
   const nombreLocal = config?.nombre_local || 'Nombre del Local'
-  doc.text(nombreLocal, pageWidth / 2, y + 5, { align: 'center' })
+  doc.text(nombreLocal, pageWidth / 2, centerY - 6, { align: 'center' })
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
@@ -60,24 +63,24 @@ export async function generarPDFPresupuesto(
   const telefono = config?.telefono || 'Teléfono'
   const email = config?.email || 'Email'
 
-  doc.text(`${ubicacion} | ${celular}`, pageWidth / 2, y + 10, { align: 'center' })
-  doc.text(`${telefono} | ${email}`, pageWidth / 2, y + 14, { align: 'center' })
+  doc.text(`${ubicacion} | ${celular}`, pageWidth / 2, centerY, { align: 'center' })
+  doc.text(`${telefono} | ${email}`, pageWidth / 2, centerY + 4, { align: 'center' })
 
-  // Número de presupuesto (derecha)
+  // Número de presupuesto (derecha) - centrado verticalmente
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text('PRESUPUESTO', pageWidth - rightMargin, y + 5, { align: 'right' })
+  doc.text('PRESUPUESTO', pageWidth - rightMargin, centerY - 6, { align: 'right' })
 
   doc.setFontSize(14)
   const numeroPresupuesto = presupuesto.numero_presupuesto.toString().padStart(6, '0')
-  doc.text(`N° ${numeroPresupuesto}`, pageWidth - rightMargin, y + 11, { align: 'right' })
+  doc.text(`N° ${numeroPresupuesto}`, pageWidth - rightMargin, centerY, { align: 'right' })
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   const fechaCreacion = new Date(presupuesto.fecha_creacion).toLocaleDateString('es-AR')
-  doc.text(fechaCreacion, pageWidth - rightMargin, y + 16, { align: 'right' })
+  doc.text(fechaCreacion, pageWidth - rightMargin, centerY + 4, { align: 'right' })
 
-  y += 30
+  y += headerHeight + 5
 
   // Línea separadora
   doc.setLineWidth(0.3)
@@ -122,10 +125,10 @@ export async function generarPDFPresupuesto(
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   
-  // Headers de la tabla
+  // Headers de la tabla - Ajustar anchos para evitar superposición
   const colCantidad = leftMargin
-  const colDetalle = leftMargin + 20
-  const colPrecio = pageWidth - rightMargin - 40
+  const colDetalle = leftMargin + 18
+  const colPrecio = pageWidth - 65  // Ajustado para dar más espacio
   const colSubtotal = pageWidth - rightMargin
   
   // Fondo gris para headers
@@ -136,7 +139,7 @@ export async function generarPDFPresupuesto(
   doc.setTextColor(71, 85, 105)
   doc.text('CANT.', colCantidad + 2, y)
   doc.text('DETALLE', colDetalle, y)
-  doc.text('PRECIO UNIT.', colPrecio, y)
+  doc.text('P. UNIT.', colPrecio, y, { align: 'right' })
   doc.text('SUBTOTAL', colSubtotal, y, { align: 'right' })
   
   y += 8
@@ -164,13 +167,14 @@ export async function generarPDFPresupuesto(
     doc.setFont('helvetica', 'bold')
     doc.text(item.cantidad.toString(), colCantidad + 5, y, { align: 'center' })
 
-    // Detalle
+    // Detalle - Ajustar ancho máximo para el texto
     doc.setFont('helvetica', 'normal')
-    const detalleLines = doc.splitTextToSize(item.detalle, colPrecio - colDetalle - 5)
+    const maxDetalleWidth = colPrecio - colDetalle - 10
+    const detalleLines = doc.splitTextToSize(item.detalle, maxDetalleWidth)
     doc.text(detalleLines, colDetalle, y)
 
     // Precio unitario
-    doc.text(`$${item.precio.toLocaleString()}`, colPrecio + 30, y, { align: 'right' })
+    doc.text(`$${item.precio.toLocaleString()}`, colPrecio, y, { align: 'right' })
 
     // Subtotal
     doc.setFont('helvetica', 'bold')
@@ -201,22 +205,26 @@ export async function generarPDFPresupuesto(
   doc.setFontSize(16)
   doc.text(`$${presupuesto.total.toLocaleString()}`, pageWidth - rightMargin, y, { align: 'right' })
 
-  y += 15
+  y += 12
 
-  // ===== FOOTER =====
-  if (y < 270) {
-    y = 270
+  // ===== OBSERVACIONES (si existen) =====
+  if (presupuesto.observaciones && presupuesto.observaciones.trim() !== '') {
+    y += 5
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(71, 85, 105)
+    doc.text('OBSERVACIONES:', leftMargin, y)
+    
+    y += 5
+    
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(0, 0, 0)
+    
+    const observacionesLines = doc.splitTextToSize(presupuesto.observaciones, pageWidth - leftMargin - rightMargin)
+    doc.text(observacionesLines, leftMargin, y)
   }
-  
-  doc.setFontSize(7)
-  doc.setFont('helvetica', 'italic')
-  doc.setTextColor(100, 116, 139)
-  
-  const footerText1 = 'Este presupuesto tiene una validez de 30 días desde la fecha de emisión.'
-  const footerText2 = 'Los precios pueden variar según disponibilidad de stock.'
-  
-  doc.text(footerText1, pageWidth / 2, y, { align: 'center' })
-  doc.text(footerText2, pageWidth / 2, y + 4, { align: 'center' })
 
   // Descargar el PDF
   const nombreArchivo = `Presupuesto_${numeroPresupuesto}.pdf`

@@ -124,6 +124,9 @@ export interface Presupuesto {
   // Items del presupuesto
   items: PresupuestoItem[]
   
+  // Observaciones opcionales
+  observaciones: string | null
+  
   // Total
   total: number
   
@@ -137,5 +140,6 @@ export interface PresupuestoFormData {
   cliente_nombre: string
   cliente_cuit: string
   cliente_direccion: string
+  observaciones: string
   items: PresupuestoItem[]
 }

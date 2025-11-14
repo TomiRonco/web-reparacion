@@ -17,6 +17,7 @@ export default function PresupuestosPage() {
   const [clienteNombre, setClienteNombre] = useState('')
   const [clienteCuit, setClienteCuit] = useState('')
   const [clienteDireccion, setClienteDireccion] = useState('')
+  const [observaciones, setObservaciones] = useState('')
   const [items, setItems] = useState<PresupuestoItem[]>([
     { cantidad: 1, detalle: '', precio: 0, subtotal: 0 }
   ])
@@ -128,6 +129,7 @@ export default function PresupuestosPage() {
         cliente_nombre: clienteNombre.trim() || null,
         cliente_cuit: clienteCuit.trim() || null,
         cliente_direccion: clienteDireccion.trim() || null,
+        observaciones: observaciones.trim() || null,
         items: itemsValidos,
         total: calcularTotal(),
         fecha_creacion: new Date().toISOString()
@@ -161,6 +163,7 @@ export default function PresupuestosPage() {
     setClienteNombre('')
     setClienteCuit('')
     setClienteDireccion('')
+    setObservaciones('')
     setItems([{ cantidad: 1, detalle: '', precio: 0, subtotal: 0 }])
   }
 
@@ -379,6 +382,20 @@ export default function PresupuestosPage() {
           <Plus className="w-4 h-4" />
           <span>Agregar Item</span>
         </button>
+
+        {/* Observaciones */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Observaciones (opcional)
+          </label>
+          <textarea
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+            placeholder="Ej: Presupuesto válido por 30 días, precios sujetos a cambios..."
+            rows={3}
+          />
+        </div>
 
         {/* Total */}
         <div className="flex justify-end items-center mb-6 pt-4 border-t border-gray-200">

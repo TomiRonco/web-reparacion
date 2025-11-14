@@ -78,6 +78,9 @@ CREATE TABLE IF NOT EXISTS presupuestos (
   -- Items del presupuesto (JSON array)
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   
+  -- Observaciones opcionales
+  observaciones TEXT,
+  
   -- Total calculado
   total DECIMAL(10, 2) NOT NULL DEFAULT 0,
   
