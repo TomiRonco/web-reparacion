@@ -207,23 +207,18 @@ export async function generarPDFPresupuesto(
 
   y += 12
 
-  // ===== OBSERVACIONES (si existen) =====
+  // ===== OBSERVACIONES (si existen) - Centradas sin título =====
   if (presupuesto.observaciones && presupuesto.observaciones.trim() !== '') {
-    y += 5
-    
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(71, 85, 105)
-    doc.text('OBSERVACIONES:', leftMargin, y)
-    
-    y += 5
+    y += 8
     
     doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(0, 0, 0)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(100, 116, 139)
     
-    const observacionesLines = doc.splitTextToSize(presupuesto.observaciones, pageWidth - leftMargin - rightMargin)
-    doc.text(observacionesLines, leftMargin, y)
+    const observacionesLines = doc.splitTextToSize(presupuesto.observaciones, pageWidth - leftMargin - rightMargin - 20)
+    observacionesLines.forEach((line: string, index: number) => {
+      doc.text(line, pageWidth / 2, y + (index * 4), { align: 'center' })
+    })
   }
 
   // Descargar el PDF
