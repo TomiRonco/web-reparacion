@@ -189,14 +189,27 @@ export async function generarPDFPresupuesto(
     }
   })
 
-  y += 5
+  // Mover el total casi al final de la página
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const totalY = pageHeight - 30  // 30mm desde el borde inferior
+
+  // Si hay observaciones, dejar espacio para ellas
+  const espacioObservaciones = presupuesto.observaciones && presupuesto.observaciones.trim() !== '' ? 15 : 0
+  const finalTotalY = totalY - espacioObservaciones
+
+  // Asegurar que el total esté en la posición correcta
+  if (y > finalTotalY - 10) {
+    // Si los items están muy abajo, usar la posición actual
+    y += 10
+  } else {
+    // Si hay espacio, mover al final
+    y = finalTotalY
+  }
 
   // Línea antes del total
   doc.setLineWidth(0.5)
   doc.setDrawColor(100, 116, 139)
-  doc.line(leftMargin, y, pageWidth - rightMargin, y)
-
-  y += 8
+  doc.line(leftMargin, y - 5, pageWidth - rightMargin, y - 5)
 
   // ===== TOTAL =====
   doc.setFontSize(14)
