@@ -397,19 +397,16 @@ export default function ReparacionesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {reparacion.monto ? `$${reparacion.monto.toLocaleString()}` : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => {
                           setSelectedReparacion(reparacion)
                           setShowNotasModal(true)
                         }}
-                        className="flex items-center space-x-2 px-3 py-1.5 rounded-md hover:bg-slate-100 transition group"
-                        title={reparacion.notas ? "Ver/Editar nota" : "Agregar nota"}
+                        className="inline-flex items-center justify-center p-2 rounded-md hover:bg-slate-100 transition"
+                        title={reparacion.notas ? `Ver/Editar nota: ${reparacion.notas.substring(0, 50)}${reparacion.notas.length > 50 ? '...' : ''}` : "Agregar nota"}
                       >
-                        <StickyNote className={`w-4 h-4 ${reparacion.notas ? 'text-blue-600' : 'text-slate-400'}`} />
-                        <span className="max-w-[200px] truncate text-left">
-                          {reparacion.notas || 'Agregar nota'}
-                        </span>
+                        <StickyNote className={`w-5 h-5 ${reparacion.notas ? 'text-blue-600' : 'text-slate-400'}`} />
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
