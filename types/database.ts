@@ -152,11 +152,14 @@ export interface ItemStock {
   cantidad: number
 }
 
+export type UbicacionStock = 'adelante' | 'atras'
+
 export interface Contenedor {
   id: string
   user_id: string
   nombre: string
   items: ItemStock[]
+  ubicacion: UbicacionStock
   created_at: string
   updated_at: string
 }
@@ -164,4 +167,5 @@ export interface Contenedor {
 export interface ContenedorFormData {
   nombre: string
   items: ItemStock[]
+  ubicacion?: UbicacionStock
 }

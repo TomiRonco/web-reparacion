@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Package, FileText } from 'lucide-react'
-import type { Contenedor, ItemStock, ContenedorFormData } from '@/types/database'
+import type { Contenedor, ItemStock, ContenedorFormData, UbicacionStock } from '@/types/database'
 import { generarPDFStock } from '@/lib/pdf-stock'
 import PageHeader from '@/components/PageHeader'
 
 export default function StockPage() {
+  const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
   const [contenedores, setContenedores] = useState<Contenedor[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -24,6 +25,7 @@ export default function StockPage() {
       .from('contenedores')
       .select('*')
       .eq('user_id', user.id)
+      .eq('ubicacion', tabActivo)
       .order('nombre')
 
     if (!error && data) {
@@ -35,7 +37,7 @@ export default function StockPage() {
   useEffect(() => {
     fetchContenedores()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [tabActivo])
 
   const handleGuardarContenedor = async (formData: ContenedorFormData) => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -47,7 +49,8 @@ export default function StockPage() {
         .from('contenedores')
         .update({
           nombre: formData.nombre,
-          items: formData.items
+          items: formData.items,
+          ubicacion: tabActivo
         })
         .eq('id', editingContenedor.id)
 
@@ -62,7 +65,8 @@ export default function StockPage() {
         .insert({
           user_id: user.id,
           nombre: formData.nombre,
-          items: formData.items
+          items: formData.items,
+          ubicacion: tabActivo
         })
 
       if (error) {
@@ -92,8 +96,21 @@ export default function StockPage() {
     await fetchContenedores()
   }
 
-  const handleExportarPDF = () => {
-    generarPDFStock(contenedores)
+  const handleExportarPDF = async () => {
+    // Obtener todos los contenedores del tab actual
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('contenedores')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('ubicacion', tabActivo)
+      .order('nombre')
+
+    if (data) {
+      generarPDFStock(data, tabActivo)
+    }
   }
 
   if (loading) {
@@ -133,8 +150,36 @@ export default function StockPage() {
         }
       />
 
-      {/* Lista de Contenedores */}
+      {/* Tabs para Stock Adelante / Stock Atrás */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="flex border-b border-slate-200">
+            <button
+              onClick={() => setTabActivo('adelante')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+                tabActivo === 'adelante'
+                  ? 'bg-purple-600 text-white border-b-4 border-purple-700'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              Stock Adelante
+            </button>
+            <button
+              onClick={() => setTabActivo('atras')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+                tabActivo === 'atras'
+                  ? 'bg-purple-600 text-white border-b-4 border-purple-700'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              Stock Atrás
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Contenedores */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {contenedores.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />

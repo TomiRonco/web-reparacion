@@ -1,13 +1,13 @@
 import jsPDF from 'jspdf'
-import type { Contenedor } from '@/types/database'
+import type { Contenedor, UbicacionStock } from '@/types/database'
 
-export function generarPDFStock(contenedores: Contenedor[]) {
+export function generarPDFStock(contenedores: Contenedor[], ubicacion?: UbicacionStock) {
   const doc = new jsPDF()
   
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 6
-  const headerHeight = 25
+  const headerHeight = 28
   
   // Configuración del grid - 3 columnas
   const cols = 3
@@ -27,7 +27,8 @@ export function generarPDFStock(contenedores: Contenedor[]) {
     // Título
     doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
-    doc.text('INVENTARIO DE STOCK', pageWidth / 2, y, { align: 'center' })
+    const titulo = ubicacion === 'adelante' ? 'INVENTARIO DE STOCK - ADELANTE' : 'INVENTARIO DE STOCK - ATRÁS'
+    doc.text(titulo, pageWidth / 2, y, { align: 'center' })
     y += 7
 
     // Fecha del día
