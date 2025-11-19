@@ -281,6 +281,35 @@ function ModalContenedor({
     nombre: contenedor?.nombre || '',
     items: contenedor?.items || []
   })
+  const [itemsUnicos, setItemsUnicos] = useState<string[]>([])
+  const [sugerenciasActivas, setSugerenciasActivas] = useState<{ [key: number]: boolean }>({})
+  
+  const supabase = createClient()
+
+  // Obtener todos los items únicos del stock (ambas ubicaciones)
+  useEffect(() => {
+    const fetchItemsUnicos = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('contenedores')
+        .select('items')
+        .eq('user_id', user.id)
+
+      if (!error && data) {
+        // Extraer todos los detalles únicos de items
+        const todosLosItems = data.flatMap(cont => 
+          Array.isArray(cont.items) ? cont.items.map((item: ItemStock) => item.detalle) : []
+        )
+        // Eliminar duplicados y ordenar
+        const unicos = Array.from(new Set(todosLosItems)).sort()
+        setItemsUnicos(unicos)
+      }
+    }
+
+    fetchItemsUnicos()
+  }, [supabase])
 
   const agregarItem = () => {
     setFormData({
@@ -297,6 +326,30 @@ function ModalContenedor({
       nuevosItems[index][field] = value as string
     }
     setFormData({ ...formData, items: nuevosItems })
+    
+    // Activar sugerencias cuando se está escribiendo en detalle
+    if (field === 'detalle' && typeof value === 'string' && value.length > 0) {
+      setSugerenciasActivas({ ...sugerenciasActivas, [index]: true })
+    }
+  }
+
+  const seleccionarSugerencia = (index: number, sugerencia: string) => {
+    const nuevosItems = [...formData.items]
+    nuevosItems[index].detalle = sugerencia
+    setFormData({ ...formData, items: nuevosItems })
+    setSugerenciasActivas({ ...sugerenciasActivas, [index]: false })
+  }
+
+  const cerrarSugerencias = (index: number) => {
+    setSugerenciasActivas({ ...sugerenciasActivas, [index]: false })
+  }
+
+  const filtrarSugerencias = (texto: string): string[] => {
+    if (!texto || texto.length < 2) return []
+    const textoLower = texto.toLowerCase()
+    return itemsUnicos.filter(item => 
+      item.toLowerCase().includes(textoLower)
+    ).slice(0, 8) // Máximo 8 sugerencias
   }
 
   const eliminarItem = (index: number) => {
@@ -317,7 +370,7 @@ function ModalContenedor({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
         <div className="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
           <div className="flex items-center space-x-2">
             <Package className="w-6 h-6 text-purple-600" />
@@ -362,46 +415,69 @@ function ModalContenedor({
               </button>
             </div>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            <div className="space-y-3 min-h-[300px] max-h-[500px] overflow-y-auto pr-2">
               {formData.items.length === 0 ? (
                 <div className="text-center py-8 text-slate-400">
                   <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>No hay items. Agrega el primer item.</p>
                 </div>
               ) : (
-                formData.items.map((item, index) => (
-                  <div key={index} className="flex space-x-2 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        required
-                        value={item.detalle}
-                        onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                        className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
-                        placeholder="Detalle del producto"
-                      />
+                formData.items.map((item, index) => {
+                  const sugerencias = filtrarSugerencias(item.detalle)
+                  const mostrarSugerencias = sugerenciasActivas[index] && sugerencias.length > 0
+
+                  return (
+                    <div key={index} className="flex space-x-2 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          required
+                          value={item.detalle}
+                          onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                          onBlur={() => setTimeout(() => cerrarSugerencias(index), 200)}
+                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
+                          placeholder="Detalle del producto"
+                          autoComplete="off"
+                        />
+                        
+                        {/* Lista de sugerencias autocompletado */}
+                        {mostrarSugerencias && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border-2 border-purple-400 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                            {sugerencias.map((sugerencia, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => seleccionarSugerencia(index, sugerencia)}
+                                className="w-full text-left px-4 py-3 hover:bg-purple-50 text-base text-slate-700 border-b border-slate-100 last:border-0 transition-colors font-medium"
+                              >
+                                <span className="font-bold text-purple-600 text-lg">📦</span> {sugerencia}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-24">
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          value={item.cantidad}
+                          onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
+                          placeholder="Cant."
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => eliminarItem(index)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition"
+                        title="Eliminar item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="w-24">
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        value={item.cantidad}
-                        onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                        className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
-                        placeholder="Cant."
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => eliminarItem(index)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-md transition"
-                      title="Eliminar item"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
