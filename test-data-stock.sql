@@ -7,7 +7,7 @@
 -- Variable de usuario (CAMBIAR ESTO)
 DO $$
 DECLARE
-  v_user_id UUID := 'TU_USER_ID_AQUI'; -- ⚠️ CAMBIAR POR TU USER_ID REAL
+  v_user_id UUID := '8d063842-fe3a-4314-b7e9-17f457f1cfc7'; -- ⚠️ CAMBIAR POR TU USER_ID REAL
 BEGIN
 
 -- Limpiar datos de prueba anteriores (opcional)

@@ -9,14 +9,16 @@ export function generarPDFStock(contenedores: Contenedor[]) {
   const margin = 6
   const headerHeight = 25
   
-  // Configuración del grid - 3 columnas para aprovechar más espacio
+  // Configuración del grid - 3 columnas
   const cols = 3
-  const boxWidth = (pageWidth - margin * (cols + 1)) / cols // Ancho de cada caja
-  const boxMargin = 2 // Margen interno de la caja
-  const boxSpacing = 2 // Espacio entre cajas
+  const boxWidth = (pageWidth - margin * (cols + 1)) / cols
+  const boxMargin = 2
+  const boxSpacing = 3 // Espacio entre cajas verticalmente
   
   let currentPage = 1
-  let boxIndex = 0
+  
+  // Array para trackear la posición Y actual de cada columna
+  const columnY = [headerHeight, headerHeight, headerHeight]
 
   // Función para dibujar header con fecha
   const drawHeader = () => {
@@ -50,32 +52,38 @@ export function generarPDFStock(contenedores: Contenedor[]) {
   drawHeader()
 
   // Recorrer cada contenedor
-  for (let i = 0; i < contenedores.length; i++) {
-    const contenedor = contenedores[i]
+  contenedores.forEach((contenedor) => {
+    // Encontrar la columna con menor altura (colocar donde hay más espacio)
+    const colIndex = columnY.indexOf(Math.min(...columnY))
     
-    // Calcular posición en el grid
-    const col = boxIndex % cols
-    const row = Math.floor(boxIndex / cols)
-    
-    // Calcular coordenadas X e Y
-    const x = margin + col * (boxWidth + boxSpacing)
-    const y = headerHeight + row * 65 // 65 es la altura ultra-compacta de cada caja
-    
-    // Verificar si necesitamos una nueva página
-    if (y + 63 > pageHeight - 6) {
-      doc.addPage()
-      currentPage++
-      drawHeader()
-      boxIndex = 0 // Reiniciar el índice en la nueva página
-      i-- // Volver a procesar este contenedor en la nueva página
-      continue
-    }
-
     // Calcular altura necesaria para el contenedor
     const itemCount = contenedor.items?.length || 0
     const itemHeight = 4
-    const baseHeight = 18
-    const boxHeight = Math.min(baseHeight + itemCount * itemHeight, 62)
+    const headerBoxHeight = 8
+    const footerBoxHeight = 6
+    const minEmptyHeight = 14
+    
+    // Altura real basada en contenido
+    let boxHeight = headerBoxHeight + footerBoxHeight
+    if (itemCount > 0) {
+      boxHeight += itemCount * itemHeight
+    } else {
+      boxHeight += minEmptyHeight
+    }
+
+    // Calcular coordenadas X e Y
+    const x = margin + colIndex * (boxWidth + boxSpacing)
+    let y = columnY[colIndex]
+    
+    // Verificar si necesitamos una nueva página
+    if (y + boxHeight > pageHeight - 10) {
+      doc.addPage()
+      currentPage++
+      drawHeader()
+      // Resetear todas las columnas
+      columnY.fill(headerHeight)
+      y = headerHeight
+    }
 
     // Dibujar borde de la caja
     doc.setDrawColor(147, 51, 234) // purple-600
@@ -84,7 +92,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
 
     // Header del contenedor (fondo morado)
     doc.setFillColor(147, 51, 234) // purple-600
-    doc.roundedRect(x, y, boxWidth, 8, 1, 1, 'F')
+    doc.roundedRect(x, y, boxWidth, headerBoxHeight, 1, 1, 'F')
     
     // Nombre del contenedor
     doc.setFontSize(8)
@@ -96,18 +104,14 @@ export function generarPDFStock(contenedores: Contenedor[]) {
     // Volver a color negro
     doc.setTextColor(0, 0, 0)
     
-    let itemY = y + 12
+    let itemY = y + headerBoxHeight + 4
 
     // Items del contenedor
     if (contenedor.items && contenedor.items.length > 0) {
       doc.setFontSize(6.5)
       doc.setFont('helvetica', 'normal')
 
-      // Mostrar items (máximo espacio disponible)
-      const maxItems = Math.floor((boxHeight - 14) / itemHeight)
-      const itemsToShow = contenedor.items.slice(0, maxItems)
-
-      itemsToShow.forEach((item, idx) => {
+      contenedor.items.forEach((item, idx) => {
         // Fondo alternado
         if (idx % 2 === 0) {
           doc.setFillColor(248, 248, 248)
@@ -127,16 +131,6 @@ export function generarPDFStock(contenedores: Contenedor[]) {
         itemY += itemHeight
       })
 
-      // Si hay más items, mostrar indicador
-      if (contenedor.items.length > maxItems) {
-        doc.setFontSize(5.5)
-        doc.setFont('helvetica', 'italic')
-        doc.setTextColor(100, 100, 100)
-        doc.text(`+${contenedor.items.length - maxItems} más...`, x + boxMargin, itemY)
-        doc.setTextColor(0, 0, 0)
-        itemY += 3
-      }
-
       // Total de items en el footer de la caja
       doc.setFontSize(5.5)
       doc.setFont('helvetica', 'bold')
@@ -144,7 +138,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
       doc.text(
         `Total: ${contenedor.items.length} items`,
         x + boxWidth / 2,
-        y + boxHeight - 2.5,
+        y + boxHeight - 2,
         { align: 'center' }
       )
       doc.setTextColor(0, 0, 0)
@@ -153,12 +147,13 @@ export function generarPDFStock(contenedores: Contenedor[]) {
       doc.setFontSize(7)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(150, 150, 150)
-      doc.text('Sin items', x + boxWidth / 2, itemY + 6, { align: 'center' })
+      doc.text('Sin items', x + boxWidth / 2, itemY + 2, { align: 'center' })
       doc.setTextColor(0, 0, 0)
     }
 
-    boxIndex++
-  }
+    // Actualizar la posición Y de esta columna
+    columnY[colIndex] = y + boxHeight + boxSpacing
+  })
 
   // Footer en la última página
   const totalContenedores = contenedores.length
