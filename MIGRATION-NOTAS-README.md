@@ -73,18 +73,30 @@ Deberías ver:
 
 ## 🔄 Cómo Usar la Nueva Funcionalidad
 
-### Agregar Notas a una Reparación
+### Agregar o Editar Notas
 
 1. Ve a **Dashboard → Reparaciones**
-2. Haz clic en **Nueva Reparación**
-3. Completa los campos obligatorios
-4. En el campo **"Notas (Opcional)"** puedes agregar información adicional
-5. Guarda la reparación
+2. En la lista de reparaciones, busca la columna **"Notas"**
+3. Haz clic en el botón con el ícono de nota (📝):
+   - Si no hay notas, verás "Agregar nota" en gris
+   - Si ya hay notas, el ícono será azul y verás un preview de la nota
+4. Se abrirá un modal donde puedes:
+   - Ver el comprobante y datos de la reparación
+   - Escribir o editar las notas
+   - Guardar o cancelar los cambios
 
 ### Ver Notas en la Lista
 
-- **Vista Desktop (tabla)**: La columna "Notas" muestra las notas de cada reparación
-- **Vista Mobile (cards)**: Las notas aparecen como una sección adicional si existen
+- **Vista Desktop (tabla)**: La columna "Notas" muestra un botón clicable con preview
+- **Vista Mobile (cards)**: Un botón expandible con el ícono y preview de la nota
+
+### Características
+
+- ✅ Las notas son **opcionales** - no es necesario agregar notas a todas las reparaciones
+- ✅ Las notas son **privadas** - solo visibles para ti y tu equipo
+- ✅ Se pueden **editar en cualquier momento** desde la lista
+- ✅ El ícono cambia de color (gris → azul) cuando hay notas guardadas
+- ✅ **No se agregan notas al crear una reparación nueva** - solo después desde la lista
 
 ---
 
