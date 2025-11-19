@@ -296,7 +296,7 @@ function ModalContenedor({
               required
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 shadow-sm"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 shadow-sm font-medium"
               placeholder="Ej: Caja 1, Estante A, etc."
             />
           </div>
@@ -325,14 +325,14 @@ function ModalContenedor({
                 </div>
               ) : (
                 formData.items.map((item, index) => (
-                  <div key={index} className="flex space-x-2 items-start bg-slate-50 p-3 rounded-lg">
+                  <div key={index} className="flex space-x-2 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div className="flex-1">
                       <input
                         type="text"
                         required
                         value={item.detalle}
                         onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                        className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
                         placeholder="Detalle del producto"
                       />
                     </div>
@@ -343,7 +343,7 @@ function ModalContenedor({
                         min="1"
                         value={item.cantidad}
                         onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm text-center"
+                        className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
                         placeholder="Cant."
                       />
                     </div>
