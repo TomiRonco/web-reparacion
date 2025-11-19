@@ -210,7 +210,7 @@ async function generarDocumentoPDF(
     
     // ===== FOOTER - Posicionarlo cerca de la línea de corte =====
     // Calcular posición del footer antes de la línea de corte
-    const footerY = esOriginal ? halfHeight - 15 : pageHeight - 15
+    const footerY = esOriginal ? halfHeight - 18 : pageHeight - 18
     
     doc.setFontSize(7)
     doc.setFont('helvetica', 'italic')
@@ -218,10 +218,12 @@ async function generarDocumentoPDF(
     const footerText1 = 'En caso de no ser aceptada la reparación, la revisión tiene un costo de $10,000.'
     const footerText2 = 'La revisión puede llevar entre 2 a 3 días.'
     const footerText3 = 'Si la reparación permanece más de 30 días en el local, los precios se actualizarán.'
+    const footerText4 = 'Los componentes agregados o cambiados solo tienen garantía válida con su caja.'
     
     doc.text(footerText1, pageWidth / 2, footerY, { align: 'center' })
     doc.text(footerText2, pageWidth / 2, footerY + 4, { align: 'center' })
     doc.text(footerText3, pageWidth / 2, footerY + 8, { align: 'center' })
+    doc.text(footerText4, pageWidth / 2, footerY + 12, { align: 'center' })
   }
   
   // Dibujar sección Original (mitad superior)
