@@ -326,6 +326,9 @@ export default function ReparacionesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Monto
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Notas
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   PDF
                 </th>
@@ -337,7 +340,7 @@ export default function ReparacionesPage() {
             <tbody className="bg-white divide-y divide-slate-200">
               {reparacionesFiltradas.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                     {filtros.busqueda || filtros.estado !== 'todos' ? (
                       <div className="space-y-2">
                         <p className="text-lg font-medium">No se encontraron reparaciones</p>
@@ -371,6 +374,9 @@ export default function ReparacionesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {reparacion.monto ? `$${reparacion.monto.toLocaleString()}` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                      {reparacion.notas || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex justify-center">
@@ -490,6 +496,14 @@ export default function ReparacionesPage() {
                 </div>
               </div>
 
+              {/* Notas */}
+              {reparacion.notas && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-medium text-slate-500 mb-1">Notas</p>
+                  <p className="text-sm text-slate-600">{reparacion.notas}</p>
+                </div>
+              )}
+
               {/* Acciones */}
               <div className="border-t pt-3 flex items-center justify-between">
                 <button
@@ -580,6 +594,7 @@ function ModalAgregarReparacion({
     marca: '',
     tiene_cargador: false,
     observacion: '',
+    notas: '',
     tecnico_id: ''
   })
 
@@ -726,6 +741,19 @@ function ModalAgregarReparacion({
               rows={3}
               className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
               placeholder="Detalles adicionales sobre el estado del producto..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Notas (Opcional)
+            </label>
+            <textarea
+              value={formData.notas}
+              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+              rows={2}
+              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
+              placeholder="Notas adicionales sobre la reparación..."
             />
           </div>
 

@@ -42,6 +42,7 @@ export interface Reparacion {
   marca: string
   tiene_cargador: boolean
   observacion: string | null
+  notas: string | null
   
   // Asignación y estado
   tecnico_id: string | null
@@ -72,6 +73,7 @@ export interface ReparacionFormData {
   marca: string
   tiene_cargador: boolean
   observacion: string
+  notas: string
   tecnico_id: string
 }
 
