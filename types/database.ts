@@ -144,3 +144,24 @@ export interface PresupuestoFormData {
   observaciones: string
   items: PresupuestoItem[]
 }
+
+// Tipos para Stock
+export interface ItemStock {
+  id?: string
+  detalle: string
+  cantidad: number
+}
+
+export interface Contenedor {
+  id: string
+  user_id: string
+  nombre: string
+  items: ItemStock[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ContenedorFormData {
+  nombre: string
+  items: ItemStock[]
+}
