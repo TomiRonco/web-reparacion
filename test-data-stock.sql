@@ -1,5 +1,6 @@
 -- Script para generar datos de prueba para la funcionalidad de Stock
 -- Este script crea múltiples contenedores con varios items para probar la generación de PDF
+-- Incluye datos para Stock Adelante y Stock Atrás
 
 -- IMPORTANTE: Reemplaza 'TU_USER_ID_AQUI' con tu user_id real de auth.users
 -- Puedes obtener tu user_id ejecutando: SELECT id FROM auth.users WHERE email = 'tu_email@ejemplo.com';
@@ -13,22 +14,26 @@ BEGIN
 -- Limpiar datos de prueba anteriores (opcional)
 -- DELETE FROM contenedores WHERE user_id = v_user_id;
 
--- Crear 30 contenedores de prueba con diferentes cantidades de items
+-- ============================================
+-- STOCK ADELANTE (15 contenedores)
+-- ============================================
 
--- Contenedores de Electrónica (10 contenedores)
-INSERT INTO contenedores (user_id, nombre, items) VALUES
+-- Contenedores de Electrónica Stock Adelante (5 contenedores)
+INSERT INTO contenedores (user_id, nombre, items, ubicacion) VALUES
 (v_user_id, 'CAJÓN A1 - Resistencias', '[
   {"detalle": "Resistencias 220Ω 1/4W", "cantidad": 500},
   {"detalle": "Resistencias 330Ω 1/4W", "cantidad": 450},
   {"detalle": "Resistencias 1kΩ 1/4W", "cantidad": 600},
   {"detalle": "Resistencias 10kΩ 1/4W", "cantidad": 400},
   {"detalle": "Resistencias 100kΩ 1/4W", "cantidad": 350}
-]'::jsonb),
+]'::jsonb, 'adelante'),
 
 (v_user_id, 'CAJÓN A2 - Capacitores', '[
   {"detalle": "Capacitores cerámicos 100nF", "cantidad": 200},
   {"detalle": "Capacitores electrolíticos 10µF", "cantidad": 150},
   {"detalle": "Capacitores electrolíticos 100µF", "cantidad": 120},
+  {"detalle": "Capacitores 1µF 50V", "cantidad": 180}
+]'::jsonb, 'adelante'),
   {"detalle": "Capacitores 1µF 50V", "cantidad": 180}
 ]'::jsonb),
 
@@ -39,7 +44,7 @@ INSERT INTO contenedores (user_id, nombre, items) VALUES
   {"detalle": "LEDs azules 5mm", "cantidad": 180},
   {"detalle": "LEDs blancos 5mm", "cantidad": 150},
   {"detalle": "Diodos Zener 5.1V", "cantidad": 100}
-]'::jsonb),
+]'::jsonb, 'adelante'),
 
 (v_user_id, 'CAJÓN A4 - Transistores', '[
   {"detalle": "Transistores BC548 NPN", "cantidad": 200},
@@ -47,7 +52,7 @@ INSERT INTO contenedores (user_id, nombre, items) VALUES
   {"detalle": "Transistores 2N2222", "cantidad": 150},
   {"detalle": "Transistores TIP41C", "cantidad": 80},
   {"detalle": "MOSFETs IRF540N", "cantidad": 60}
-]'::jsonb),
+]'::jsonb, 'adelante'),
 
 (v_user_id, 'CAJÓN A5 - Circuitos Integrados', '[
   {"detalle": "LM358 Amplificador operacional", "cantidad": 50},
@@ -55,7 +60,7 @@ INSERT INTO contenedores (user_id, nombre, items) VALUES
   {"detalle": "7805 Regulador 5V", "cantidad": 60},
   {"detalle": "LM317 Regulador ajustable", "cantidad": 40},
   {"detalle": "Arduino Nano compatible", "cantidad": 15}
-]'::jsonb),
+]'::jsonb, 'adelante');
 
 (v_user_id, 'CAJÓN B1 - Conectores', '[
   {"detalle": "Headers macho 40 pines", "cantidad": 100},
