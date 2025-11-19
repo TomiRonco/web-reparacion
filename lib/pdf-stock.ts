@@ -25,13 +25,13 @@ export function generarPDFStock(contenedores: Contenedor[]) {
     let y = 10
     
     // Título
-    doc.setFontSize(14)
+    doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
     doc.text('INVENTARIO DE STOCK', pageWidth / 2, y, { align: 'center' })
-    y += 6
+    y += 7
 
     // Fecha del día
-    doc.setFontSize(8)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
     const fecha = new Date().toLocaleDateString('es-AR', { 
       weekday: 'long',
@@ -40,7 +40,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
       day: 'numeric' 
     })
     doc.text(fecha.charAt(0).toUpperCase() + fecha.slice(1), pageWidth / 2, y, { align: 'center' })
-    y += 5
+    y += 6
 
     // Línea divisoria
     doc.setDrawColor(147, 51, 234) // purple-600
@@ -95,7 +95,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
     doc.roundedRect(x, y, boxWidth, headerBoxHeight, 1, 1, 'F')
     
     // Nombre del contenedor
-    doc.setFontSize(8)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(255, 255, 255) // blanco
     const nombreTruncado = doc.splitTextToSize(contenedor.nombre.toUpperCase(), boxWidth - boxMargin * 2)
@@ -108,7 +108,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
 
     // Items del contenedor
     if (contenedor.items && contenedor.items.length > 0) {
-      doc.setFontSize(6.5)
+      doc.setFontSize(7.5)
       doc.setFont('helvetica', 'normal')
 
       contenedor.items.forEach((item, idx) => {
@@ -132,7 +132,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
       })
 
       // Total de items en el footer de la caja
-      doc.setFontSize(5.5)
+      doc.setFontSize(6.5)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(147, 51, 234)
       doc.text(
@@ -144,7 +144,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
       doc.setTextColor(0, 0, 0)
     } else {
       // Sin items
-      doc.setFontSize(7)
+      doc.setFontSize(8)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(150, 150, 150)
       doc.text('Sin items', x + boxWidth / 2, itemY + 2, { align: 'center' })
@@ -159,7 +159,7 @@ export function generarPDFStock(contenedores: Contenedor[]) {
   const totalContenedores = contenedores.length
   const totalItems = contenedores.reduce((sum, cont) => sum + (cont.items?.length || 0), 0)
   
-  doc.setFontSize(7)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
   doc.setTextColor(100, 100, 100)
   const footerY = pageHeight - 6
