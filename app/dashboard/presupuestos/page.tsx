@@ -12,6 +12,7 @@ export default function PresupuestosPage() {
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
+  const [modalAbierto, setModalAbierto] = useState(false)
 
   // Form state
   const [clienteNombre, setClienteNombre] = useState('')
@@ -151,6 +152,9 @@ export default function PresupuestosPage() {
       // Recargar lista
       await cargarDatos()
 
+      // Cerrar modal
+      setModalAbierto(false)
+
       alert('Presupuesto guardado exitosamente')
     } catch (error) {
       console.error('Error:', error)
@@ -200,229 +204,19 @@ export default function PresupuestosPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Presupuestos" gradient="green" />
-
-      {/* Formulario de nuevo presupuesto */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Nuevo Presupuesto</h2>
-
-        {/* Datos del cliente (opcionales) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre del Cliente (opcional)
-            </label>
-            <input
-              type="text"
-              value={clienteNombre}
-              onChange={(e) => setClienteNombre(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-              placeholder="Juan Pérez"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              CUIT (opcional)
-            </label>
-            <input
-              type="text"
-              value={clienteCuit}
-              onChange={(e) => setClienteCuit(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-              placeholder="20-12345678-9"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dirección (opcional)
-            </label>
-            <input
-              type="text"
-              value={clienteDireccion}
-              onChange={(e) => setClienteDireccion(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-              placeholder="Calle 123, Ciudad"
-            />
-          </div>
-        </div>
-
-        {/* Tabla de items */}
-        <div className="space-y-3 mb-4">
-          {/* Headers Desktop */}
-          <div className="hidden md:grid grid-cols-12 gap-2 text-sm font-medium text-gray-700 px-2">
-            <div className="col-span-1">Cant.</div>
-            <div className="col-span-6">Detalle</div>
-            <div className="col-span-2">Precio Unit.</div>
-            <div className="col-span-2">Subtotal</div>
-            <div className="col-span-1"></div>
-          </div>
-
-          {items.map((item, index) => (
-            <div key={index}>
-              {/* Vista Desktop */}
-              <div className="hidden md:grid grid-cols-12 gap-2 items-center">
-                <div className="col-span-1">
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.cantidad}
-                    onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                    className="w-full px-2 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
-                  />
-                </div>
-
-                <div className="col-span-6">
-                  <input
-                    type="text"
-                    value={item.detalle}
-                    onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                    placeholder="Descripción del servicio o producto"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.precio}
-                    onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <div className="px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-md text-right font-semibold text-gray-900">
-                    ${item.subtotal.toLocaleString()}
-                  </div>
-                </div>
-
-                <div className="col-span-1">
-                  <button
-                    onClick={() => eliminarItem(index)}
-                    disabled={items.length === 1}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Eliminar item"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Vista Mobile */}
-              <div className="md:hidden border-2 border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Item #{index + 1}</span>
-                  <button
-                    onClick={() => eliminarItem(index)}
-                    disabled={items.length === 1}
-                    className="p-1 text-red-600 hover:bg-red-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Eliminar item"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Detalle</label>
-                  <input
-                    type="text"
-                    value={item.detalle}
-                    onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                    placeholder="Descripción del servicio o producto"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.cantidad}
-                      onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.precio}
-                      onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700">Subtotal:</span>
-                    <span className="text-lg font-bold text-blue-600">${item.subtotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={agregarItem}
-          className="flex items-center space-x-2 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md transition-colors mb-4"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar Item</span>
-        </button>
-
-        {/* Observaciones */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Observaciones (opcional)
-          </label>
-          <textarea
-            value={observaciones}
-            onChange={(e) => setObservaciones(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-            placeholder="Ej: Presupuesto válido por 30 días, precios sujetos a cambios..."
-            rows={3}
-          />
-        </div>
-
-        {/* Total */}
-        <div className="flex justify-end items-center mb-6 pt-4 border-t border-gray-200">
-          <div className="text-right">
-            <p className="text-sm text-gray-600 mb-1">Total</p>
-            <p className="text-2xl font-bold text-gray-900">
-              ${calcularTotal().toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        {/* Botones de acción */}
-        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+      <PageHeader 
+        title="Presupuestos" 
+        gradient="green"
+        actions={
           <button
-            onClick={guardarPresupuesto}
-            className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
+            onClick={() => setModalAbierto(true)}
+            className="flex items-center space-x-2 bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition shadow-md font-semibold"
           >
-            Guardar Presupuesto
+            <Plus className="w-5 h-5" />
+            <span>Nuevo Presupuesto</span>
           </button>
-          <button
-            onClick={limpiarFormulario}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
-          >
-            Limpiar
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Lista de presupuestos guardados */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -574,6 +368,249 @@ export default function PresupuestosPage() {
           </>
         )}
       </div>
+
+      {/* Modal de Nuevo Presupuesto */}
+      {modalAbierto && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-2xl font-bold text-slate-900">Nuevo Presupuesto</h2>
+              <button 
+                onClick={() => setModalAbierto(false)} 
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Datos del cliente (opcionales) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre del Cliente (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={clienteNombre}
+                    onChange={(e) => setClienteNombre(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    placeholder="Juan Pérez"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    CUIT (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={clienteCuit}
+                    onChange={(e) => setClienteCuit(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    placeholder="20-12345678-9"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dirección (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={clienteDireccion}
+                    onChange={(e) => setClienteDireccion(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    placeholder="Calle 123, Ciudad"
+                  />
+                </div>
+              </div>
+
+              {/* Tabla de items */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Items del Presupuesto
+                  </label>
+                  <button
+                    onClick={agregarItem}
+                    className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Agregar Item</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Headers Desktop */}
+                  <div className="hidden md:grid grid-cols-12 gap-2 text-sm font-medium text-gray-700 px-2">
+                    <div className="col-span-1">Cant.</div>
+                    <div className="col-span-6">Detalle</div>
+                    <div className="col-span-2">Precio Unit.</div>
+                    <div className="col-span-2">Subtotal</div>
+                    <div className="col-span-1"></div>
+                  </div>
+
+                  {items.map((item, index) => (
+                    <div key={index}>
+                      {/* Vista Desktop */}
+                      <div className="hidden md:grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-1">
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.cantidad}
+                            onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                            className="w-full px-2 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
+                          />
+                        </div>
+
+                        <div className="col-span-6">
+                          <input
+                            type="text"
+                            value={item.detalle}
+                            onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                            placeholder="Descripción del servicio o producto"
+                          />
+                        </div>
+
+                        <div className="col-span-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.precio}
+                            onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                            placeholder="0.00"
+                          />
+                        </div>
+
+                        <div className="col-span-2">
+                          <div className="px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-md text-right font-semibold text-gray-900">
+                            ${item.subtotal.toLocaleString()}
+                          </div>
+                        </div>
+
+                        <div className="col-span-1">
+                          <button
+                            onClick={() => eliminarItem(index)}
+                            disabled={items.length === 1}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Eliminar item"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Vista Mobile */}
+                      <div className="md:hidden border-2 border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-gray-700">Item #{index + 1}</span>
+                          <button
+                            onClick={() => eliminarItem(index)}
+                            disabled={items.length === 1}
+                            className="p-1 text-red-600 hover:bg-red-100 rounded-md disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="Eliminar item"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Detalle</label>
+                          <input
+                            type="text"
+                            value={item.detalle}
+                            onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                            placeholder="Descripción del servicio o producto"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.cantidad}
+                              onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center bg-white text-gray-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.precio}
+                              onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-semibold text-gray-700">Subtotal:</span>
+                            <span className="text-lg font-bold text-blue-600">${item.subtotal.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Observaciones */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observaciones (opcional)
+                </label>
+                <textarea
+                  value={observaciones}
+                  onChange={(e) => setObservaciones(e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                  placeholder="Ej: Presupuesto válido por 30 días, precios sujetos a cambios..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-end items-center pt-4 border-t border-gray-200">
+                <div className="text-right">
+                  <p className="text-sm text-gray-600 mb-1">Total</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    ${calcularTotal().toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer con botones */}
+            <div className="p-6 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50">
+              <button
+                onClick={limpiarFormulario}
+                className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Limpiar
+              </button>
+              <button
+                onClick={guardarPresupuesto}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Guardar Presupuesto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
