@@ -73,7 +73,6 @@ export interface ReparacionFormData {
   marca: string
   tiene_cargador: boolean
   observacion: string
-  notas: string
   tecnico_id: string
 }
 

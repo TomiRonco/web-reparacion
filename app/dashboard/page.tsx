@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Check, Package, X, Download } from 'lucide-react'
+import { Plus, Edit2, Check, Package, X, Download, StickyNote } from 'lucide-react'
 import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData } from '@/types/database'
 import { generarPDFComprobante, generarPDFBlob } from '@/lib/pdf-generator'
 import { abrirWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
@@ -16,6 +16,7 @@ export default function ReparacionesPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [showDiagnosticoModal, setShowDiagnosticoModal] = useState(false)
+  const [showNotasModal, setShowNotasModal] = useState(false)
   const [selectedReparacion, setSelectedReparacion] = useState<Reparacion | null>(null)
   const [filtros, setFiltros] = useState<FiltrosReparacion>({
     busqueda: '',
@@ -183,6 +184,27 @@ export default function ReparacionesPage() {
 
     await fetchData()
     setShowDiagnosticoModal(false)
+    setSelectedReparacion(null)
+  }
+
+  const handleGuardarNotas = async (notas: string) => {
+    if (!selectedReparacion) return
+
+    const { error } = await supabase
+      .from('reparaciones')
+      .update({
+        notas: notas || null,
+        fecha_actualizado: new Date().toISOString()
+      })
+      .eq('id', selectedReparacion.id)
+
+    if (error) {
+      alert('Error al guardar las notas')
+      return
+    }
+
+    await fetchData()
+    setShowNotasModal(false)
     setSelectedReparacion(null)
   }
 
@@ -375,8 +397,20 @@ export default function ReparacionesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {reparacion.monto ? `$${reparacion.monto.toLocaleString()}` : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
-                      {reparacion.notas || '-'}
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      <button
+                        onClick={() => {
+                          setSelectedReparacion(reparacion)
+                          setShowNotasModal(true)
+                        }}
+                        className="flex items-center space-x-2 px-3 py-1.5 rounded-md hover:bg-slate-100 transition group"
+                        title={reparacion.notas ? "Ver/Editar nota" : "Agregar nota"}
+                      >
+                        <StickyNote className={`w-4 h-4 ${reparacion.notas ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <span className="max-w-[200px] truncate text-left">
+                          {reparacion.notas || 'Agregar nota'}
+                        </span>
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex justify-center">
@@ -497,12 +531,23 @@ export default function ReparacionesPage() {
               </div>
 
               {/* Notas */}
-              {reparacion.notas && (
-                <div className="border-t pt-3">
-                  <p className="text-xs font-medium text-slate-500 mb-1">Notas</p>
-                  <p className="text-sm text-slate-600">{reparacion.notas}</p>
-                </div>
-              )}
+              <div className="border-t pt-3">
+                <button
+                  onClick={() => {
+                    setSelectedReparacion(reparacion)
+                    setShowNotasModal(true)
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-slate-50 transition w-full text-left"
+                >
+                  <StickyNote className={`w-4 h-4 ${reparacion.notas ? 'text-blue-600' : 'text-slate-400'}`} />
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-slate-500">Notas</p>
+                    <p className="text-sm text-slate-600 line-clamp-2">
+                      {reparacion.notas || 'Agregar nota...'}
+                    </p>
+                  </div>
+                </button>
+              </div>
 
               {/* Acciones */}
               <div className="border-t pt-3 flex items-center justify-between">
@@ -572,6 +617,18 @@ export default function ReparacionesPage() {
           onSubmit={handleAgregarDiagnostico}
         />
       )}
+
+      {/* Modal Notas */}
+      {showNotasModal && selectedReparacion && (
+        <ModalNotas
+          reparacion={selectedReparacion}
+          onClose={() => {
+            setShowNotasModal(false)
+            setSelectedReparacion(null)
+          }}
+          onSubmit={handleGuardarNotas}
+        />
+      )}
     </div>
   )
 }
@@ -594,7 +651,6 @@ function ModalAgregarReparacion({
     marca: '',
     tiene_cargador: false,
     observacion: '',
-    notas: '',
     tecnico_id: ''
   })
 
@@ -744,19 +800,6 @@ function ModalAgregarReparacion({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Notas (Opcional)
-            </label>
-            <textarea
-              value={formData.notas}
-              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-              rows={2}
-              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
-              placeholder="Notas adicionales sobre la reparación..."
-            />
-          </div>
-
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
@@ -857,6 +900,83 @@ function ModalDiagnostico({
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               Guardar y Pasar a En Proceso
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Modal para agregar/editar notas
+function ModalNotas({
+  reparacion,
+  onClose,
+  onSubmit
+}: {
+  reparacion: Reparacion
+  onClose: () => void
+  onSubmit: (notas: string) => void
+}) {
+  const [notas, setNotas] = useState<string>(reparacion.notas || '')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(notas)
+  }
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full shadow-2xl">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <StickyNote className="w-6 h-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-slate-900">Notas de Reparación</h2>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="bg-slate-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-slate-600">
+              <span className="font-medium text-slate-900">Comprobante #{reparacion.numero_comprobante.toString().padStart(6, '0')}</span>
+            </p>
+            <p className="text-sm text-slate-600">Cliente: <span className="font-medium text-slate-900">{reparacion.cliente_nombre} {reparacion.cliente_apellido}</span></p>
+            <p className="text-sm text-slate-600">Producto: <span className="font-medium text-slate-900">{reparacion.producto} - {reparacion.marca}</span></p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Notas adicionales
+            </label>
+            <textarea
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              rows={6}
+              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
+              placeholder="Escribe aquí cualquier información adicional sobre esta reparación..."
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Estas notas son privadas y solo visibles para ti y tu equipo.
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
+            >
+              <StickyNote className="w-4 h-4" />
+              <span>Guardar Notas</span>
             </button>
           </div>
         </form>
