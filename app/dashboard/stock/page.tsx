@@ -152,27 +152,33 @@ export default function StockPage() {
 
       {/* Tabs para Stock Adelante / Stock Atrás */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="flex border-b border-slate-200">
+        <div className="mb-6 border-b border-slate-200">
+          <div className="flex space-x-1">
             <button
               onClick={() => setTabActivo('adelante')}
-              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+              className={`px-6 py-3 font-medium text-sm transition-all relative ${
                 tabActivo === 'adelante'
-                  ? 'bg-purple-600 text-white border-b-4 border-purple-700'
-                  : 'text-slate-600 hover:bg-slate-50'
+                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              Stock Adelante
+              <div className="flex items-center space-x-2">
+                <Package className="w-4 h-4" />
+                <span>Stock Adelante</span>
+              </div>
             </button>
             <button
               onClick={() => setTabActivo('atras')}
-              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+              className={`px-6 py-3 font-medium text-sm transition-all relative ${
                 tabActivo === 'atras'
-                  ? 'bg-purple-600 text-white border-b-4 border-purple-700'
-                  : 'text-slate-600 hover:bg-slate-50'
+                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              Stock Atrás
+              <div className="flex items-center space-x-2">
+                <Package className="w-4 h-4" />
+                <span>Stock Atrás</span>
+              </div>
             </button>
           </div>
         </div>
