@@ -354,38 +354,38 @@ export default function ReparacionesPage() {
 
       {/* Lista de reparaciones - Vista Desktop (Tabla) */}
       <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="w-full">
+          <table className="min-w-full table-auto">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  N° Comprobante
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
+                  N° Comp.
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Producto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Técnico
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-28">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
                   Monto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">
                   Notas
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  WhatsApp
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-16">
+                  WPP
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-16">
                   PDF
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-20">
                   Acciones
                 </th>
               </tr>
@@ -407,10 +407,10 @@ export default function ReparacionesPage() {
               ) : (
                 reparacionesFiltradas.map((reparacion) => (
                   <tr key={reparacion.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-slate-900">
                       #{reparacion.numero_comprobante.toString().padStart(6, '0')}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-900">
+                    <td className="px-3 py-3 text-sm text-slate-900">
                       <div className="space-y-1">
                         <div className="font-medium">
                           {reparacion.cliente_nombre} {reparacion.cliente_apellido}
@@ -457,30 +457,30 @@ export default function ReparacionesPage() {
                               setEditandoCelular(reparacion.id)
                               setCelularTemp(reparacion.cliente_celular)
                             }}
-                            className="text-xs text-slate-600 cursor-pointer hover:text-blue-600 hover:underline flex items-center space-x-1"
+                            className="text-xs text-slate-600 cursor-pointer hover:text-blue-600 hover:underline"
                             title="Click para editar"
                           >
-                            <span>📱 {reparacion.cliente_celular}</span>
+                            {reparacion.cliente_celular}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-900">
+                    <td className="px-3 py-3 text-sm text-slate-900">
                       {reparacion.producto} - {reparacion.marca}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-slate-900">
                       {reparacion.tecnicos ? 
                         `${reparacion.tecnicos.nombre} ${reparacion.tecnicos.apellido}` : 
                         '-'
                       }
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {getEstadoBadge(reparacion.estado)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-slate-900">
                       {reparacion.monto ? `$${reparacion.monto.toLocaleString()}` : '-'}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-3 py-3 text-center">
                       <button
                         onClick={() => {
                           setSelectedReparacion(reparacion)
@@ -492,7 +492,7 @@ export default function ReparacionesPage() {
                         <StickyNote className={`w-5 h-5 ${reparacion.notas ? 'text-blue-600' : 'text-slate-400'}`} />
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-3 py-3 text-center">
                       <button
                         onClick={() => {
                           const mensaje = `*${config?.nombre_local || 'Nuestro Local'}*\n\n` +
@@ -520,7 +520,7 @@ export default function ReparacionesPage() {
                         </svg>
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex justify-center">
                         <button
                           onClick={() => generarPDFComprobante(reparacion, config)}
@@ -531,7 +531,7 @@ export default function ReparacionesPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
                       <div className="flex justify-center space-x-2">
                         {reparacion.estado === 'pendiente' && (
                           <button
