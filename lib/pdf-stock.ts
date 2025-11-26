@@ -59,7 +59,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
     
     // Calcular altura necesaria para el contenedor
     const itemCount = contenedor.items?.length || 0
-    const itemHeight = 4
+    const itemHeight = 4.5
     const headerBoxHeight = 8
     const footerBoxHeight = 6
     const minEmptyHeight = 14
@@ -133,7 +133,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
       })
 
       // Total de items en el footer de la caja
-      doc.setFontSize(8.5)
+      doc.setFontSize(7.5)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(147, 51, 234)
       doc.text(
@@ -145,7 +145,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
       doc.setTextColor(0, 0, 0)
     } else {
       // Sin items
-      doc.setFontSize(9)
+      doc.setFontSize(8)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(150, 150, 150)
       doc.text('Sin items', x + boxWidth / 2, itemY + 2, { align: 'center' })
