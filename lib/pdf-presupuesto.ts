@@ -126,11 +126,11 @@ export async function generarPDFPresupuesto(
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   
-  // Headers de la tabla - Ajustar anchos según si se muestran precios
+  // Headers de la tabla - Siempre mostrar precios de items
   const colCantidad = leftMargin
   const colDetalle = leftMargin + 18
-  const colPrecio = mostrarPrecios ? pageWidth - 65 : 0
-  const colSubtotal = mostrarPrecios ? pageWidth - rightMargin : 0
+  const colPrecio = pageWidth - 65
+  const colSubtotal = pageWidth - rightMargin
   
   // Fondo gris para headers
   doc.setFillColor(248, 250, 252)
@@ -140,10 +140,8 @@ export async function generarPDFPresupuesto(
   doc.setTextColor(71, 85, 105)
   doc.text('CANT.', colCantidad + 2, y)
   doc.text('DETALLE', colDetalle, y)
-  if (mostrarPrecios) {
-    doc.text('P. UNIT.', colPrecio, y, { align: 'right' })
-    doc.text('SUBTOTAL', colSubtotal, y, { align: 'right' })
-  }
+  doc.text('P. UNIT.', colPrecio, y, { align: 'right' })
+  doc.text('SUBTOTAL', colSubtotal, y, { align: 'right' })
   
   y += 8
   doc.setTextColor(0, 0, 0)
@@ -172,18 +170,16 @@ export async function generarPDFPresupuesto(
 
     // Detalle - Ajustar ancho máximo para el texto
     doc.setFont('helvetica', 'normal')
-    const maxDetalleWidth = mostrarPrecios ? (colPrecio - colDetalle - 10) : (pageWidth - colDetalle - rightMargin - 10)
+    const maxDetalleWidth = colPrecio - colDetalle - 10
     const detalleLines = doc.splitTextToSize(item.detalle, maxDetalleWidth)
     doc.text(detalleLines, colDetalle, y)
 
-    if (mostrarPrecios) {
-      // Precio unitario
-      doc.text(`$${item.precio.toLocaleString()}`, colPrecio, y, { align: 'right' })
+    // Precio unitario (siempre se muestra)
+    doc.text(`$${item.precio.toLocaleString()}`, colPrecio, y, { align: 'right' })
 
-      // Subtotal
-      doc.setFont('helvetica', 'bold')
-      doc.text(`$${item.subtotal.toLocaleString()}`, colSubtotal, y, { align: 'right' })
-    }
+    // Subtotal (siempre se muestra)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`$${item.subtotal.toLocaleString()}`, colSubtotal, y, { align: 'right' })
 
     y += Math.max(8, detalleLines.length * 4 + 4)
 

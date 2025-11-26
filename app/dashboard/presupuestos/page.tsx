@@ -429,7 +429,7 @@ export default function PresupuestosPage() {
                 </div>
               </div>
 
-              {/* Checkbox para incluir precios */}
+              {/* Checkbox para incluir precio total */}
               <div className="flex items-center space-x-2 py-2">
                 <input
                   type="checkbox"
@@ -439,7 +439,7 @@ export default function PresupuestosPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 />
                 <label htmlFor="mostrarPrecios" className="text-sm font-medium text-gray-700 cursor-pointer">
-                  Incluir precios en el presupuesto
+                  Incluir precio total en el presupuesto
                 </label>
               </div>
 
@@ -460,19 +460,19 @@ export default function PresupuestosPage() {
 
                 <div className="space-y-3">
                   {/* Headers Desktop */}
-                  <div className="hidden md:grid gap-2 text-sm font-medium text-gray-700 px-2" style={{ gridTemplateColumns: mostrarPrecios ? '1fr 6fr 2fr 2fr 1fr' : '1fr 10fr 1fr' }}>
-                    <div>Cant.</div>
-                    <div>Detalle</div>
-                    {mostrarPrecios && <div>Precio Unit.</div>}
-                    {mostrarPrecios && <div>Subtotal</div>}
-                    <div></div>
+                  <div className="hidden md:grid grid-cols-12 gap-2 text-sm font-medium text-gray-700 px-2">
+                    <div className="col-span-1">Cant.</div>
+                    <div className="col-span-6">Detalle</div>
+                    <div className="col-span-2">Precio Unit.</div>
+                    <div className="col-span-2">Subtotal</div>
+                    <div className="col-span-1"></div>
                   </div>
 
                   {items.map((item, index) => (
                     <div key={index}>
                       {/* Vista Desktop */}
-                      <div className="hidden md:grid gap-2 items-center" style={{ gridTemplateColumns: mostrarPrecios ? '1fr 6fr 2fr 2fr 1fr' : '1fr 10fr 1fr' }}>
-                        <div>
+                      <div className="hidden md:grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-1">
                           <input
                             type="number"
                             min="1"
@@ -482,7 +482,7 @@ export default function PresupuestosPage() {
                           />
                         </div>
 
-                        <div>
+                        <div className="col-span-6">
                           <input
                             type="text"
                             value={item.detalle}
@@ -492,29 +492,25 @@ export default function PresupuestosPage() {
                           />
                         </div>
 
-                        {mostrarPrecios && (
-                          <div>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.precio}
-                              onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        )}
+                        <div className="col-span-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.precio}
+                            onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                            placeholder="0.00"
+                          />
+                        </div>
 
-                        {mostrarPrecios && (
-                          <div>
-                            <div className="px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-md text-right font-semibold text-gray-900">
-                              ${item.subtotal.toLocaleString()}
-                            </div>
+                        <div className="col-span-2">
+                          <div className="px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-md text-right font-semibold text-gray-900">
+                            ${item.subtotal.toLocaleString()}
                           </div>
-                        )}
+                        </div>
 
-                        <div>
+                        <div className="col-span-1">
                           <button
                             onClick={() => eliminarItem(index)}
                             disabled={items.length === 1}
@@ -551,7 +547,7 @@ export default function PresupuestosPage() {
                           />
                         </div>
 
-                        <div className="grid gap-3" style={{ gridTemplateColumns: mostrarPrecios ? '1fr 1fr' : '1fr' }}>
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
                             <input
@@ -563,30 +559,26 @@ export default function PresupuestosPage() {
                             />
                           </div>
 
-                          {mostrarPrecios && (
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={item.precio}
-                                onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
-                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                                placeholder="0.00"
-                              />
-                            </div>
-                          )}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.precio}
+                              onChange={(e) => actualizarItem(index, 'precio', e.target.value)}
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                              placeholder="0.00"
+                            />
+                          </div>
                         </div>
 
-                        {mostrarPrecios && (
-                          <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-semibold text-gray-700">Subtotal:</span>
-                              <span className="text-lg font-bold text-blue-600">${item.subtotal.toLocaleString()}</span>
-                            </div>
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-semibold text-gray-700">Subtotal:</span>
+                            <span className="text-lg font-bold text-blue-600">${item.subtotal.toLocaleString()}</span>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   ))}
