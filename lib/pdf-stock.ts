@@ -125,9 +125,9 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
         doc.setFont('helvetica', 'normal')
         doc.text(detalleText[0], x + boxMargin, itemY)
         
-        // Cantidad en negrita
+        // Cantidad en negrita - alineada a la derecha del contenedor
         doc.setFont('helvetica', 'bold')
-        doc.text(`x${item.cantidad}`, x + boxWidth - boxMargin - 7, itemY, { align: 'right' })
+        doc.text(`x${item.cantidad}`, x + boxWidth - boxMargin, itemY, { align: 'right' })
         
         itemY += itemHeight
       })
