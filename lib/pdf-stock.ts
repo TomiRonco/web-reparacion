@@ -96,7 +96,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
     doc.roundedRect(x, y, boxWidth, headerBoxHeight, 1, 1, 'F')
     
     // Nombre del contenedor
-    doc.setFontSize(10)
+    doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(255, 255, 255) // blanco
     const nombreTruncado = doc.splitTextToSize(contenedor.nombre.toUpperCase(), boxWidth - boxMargin * 2)
@@ -109,14 +109,14 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
 
     // Items del contenedor
     if (contenedor.items && contenedor.items.length > 0) {
-      doc.setFontSize(8.5)
+      doc.setFontSize(10.5)
       doc.setFont('helvetica', 'normal')
 
       contenedor.items.forEach((item, idx) => {
-        // Fondo alternado
+        // Fondo alternado - ajustado para alinearse con el texto
         if (idx % 2 === 0) {
           doc.setFillColor(248, 248, 248)
-          doc.rect(x + 0.5, itemY - 2, boxWidth - 1, itemHeight, 'F')
+          doc.rect(x + 0.5, itemY - 2.5, boxWidth - 1, itemHeight, 'F')
         }
 
         // Detalle truncado
@@ -133,7 +133,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
       })
 
       // Total de items en el footer de la caja
-      doc.setFontSize(7.5)
+      doc.setFontSize(8.5)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(147, 51, 234)
       doc.text(
@@ -145,7 +145,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
       doc.setTextColor(0, 0, 0)
     } else {
       // Sin items
-      doc.setFontSize(8)
+      doc.setFontSize(9)
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(150, 150, 150)
       doc.text('Sin items', x + boxWidth / 2, itemY + 2, { align: 'center' })
