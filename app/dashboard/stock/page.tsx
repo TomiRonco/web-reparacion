@@ -26,7 +26,7 @@ export default function StockPage() {
       .select('*')
       .eq('user_id', user.id)
       .eq('ubicacion', tabActivo)
-      .order('nombre')
+      .order('created_at', { ascending: true })
 
     if (!error && data) {
       setContenedores(data)

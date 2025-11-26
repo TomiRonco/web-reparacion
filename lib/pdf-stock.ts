@@ -96,7 +96,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
     doc.roundedRect(x, y, boxWidth, headerBoxHeight, 1, 1, 'F')
     
     // Nombre del contenedor
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(255, 255, 255) // blanco
     const nombreTruncado = doc.splitTextToSize(contenedor.nombre.toUpperCase(), boxWidth - boxMargin * 2)
@@ -109,7 +109,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
 
     // Items del contenedor
     if (contenedor.items && contenedor.items.length > 0) {
-      doc.setFontSize(7.5)
+      doc.setFontSize(8.5)
       doc.setFont('helvetica', 'normal')
 
       contenedor.items.forEach((item, idx) => {
@@ -133,7 +133,7 @@ export function generarPDFStock(contenedores: Contenedor[], ubicacion?: Ubicacio
       })
 
       // Total de items en el footer de la caja
-      doc.setFontSize(6.5)
+      doc.setFontSize(7.5)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(147, 51, 234)
       doc.text(
