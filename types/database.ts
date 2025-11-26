@@ -128,6 +128,9 @@ export interface Presupuesto {
   // Observaciones opcionales
   observaciones: string | null
   
+  // Flag para mostrar precios
+  mostrar_precios: boolean
+  
   // Total
   total: number
   

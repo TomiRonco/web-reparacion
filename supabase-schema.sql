@@ -81,6 +81,9 @@ CREATE TABLE IF NOT EXISTS presupuestos (
   -- Observaciones opcionales
   observaciones TEXT,
   
+  -- Flag para mostrar precios en el PDF
+  mostrar_precios BOOLEAN NOT NULL DEFAULT TRUE,
+  
   -- Total calculado
   total DECIMAL(10, 2) NOT NULL DEFAULT 0,
   

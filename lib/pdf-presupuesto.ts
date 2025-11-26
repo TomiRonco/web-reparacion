@@ -20,7 +20,8 @@ async function cargarImagenComoBase64(url: string): Promise<string> {
 
 export async function generarPDFPresupuesto(
   presupuesto: Presupuesto,
-  config: ConfiguracionLocal | null
+  config: ConfiguracionLocal | null,
+  mostrarPrecios: boolean = true
 ) {
   const doc = new jsPDF()
   
@@ -125,11 +126,11 @@ export async function generarPDFPresupuesto(
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   
-  // Headers de la tabla - Ajustar anchos para evitar superposición
+  // Headers de la tabla - Ajustar anchos según si se muestran precios
   const colCantidad = leftMargin
   const colDetalle = leftMargin + 18
-  const colPrecio = pageWidth - 65  // Ajustado para dar más espacio
-  const colSubtotal = pageWidth - rightMargin
+  const colPrecio = mostrarPrecios ? pageWidth - 65 : 0
+  const colSubtotal = mostrarPrecios ? pageWidth - rightMargin : 0
   
   // Fondo gris para headers
   doc.setFillColor(248, 250, 252)
@@ -139,8 +140,10 @@ export async function generarPDFPresupuesto(
   doc.setTextColor(71, 85, 105)
   doc.text('CANT.', colCantidad + 2, y)
   doc.text('DETALLE', colDetalle, y)
-  doc.text('P. UNIT.', colPrecio, y, { align: 'right' })
-  doc.text('SUBTOTAL', colSubtotal, y, { align: 'right' })
+  if (mostrarPrecios) {
+    doc.text('P. UNIT.', colPrecio, y, { align: 'right' })
+    doc.text('SUBTOTAL', colSubtotal, y, { align: 'right' })
+  }
   
   y += 8
   doc.setTextColor(0, 0, 0)
@@ -169,16 +172,18 @@ export async function generarPDFPresupuesto(
 
     // Detalle - Ajustar ancho máximo para el texto
     doc.setFont('helvetica', 'normal')
-    const maxDetalleWidth = colPrecio - colDetalle - 10
+    const maxDetalleWidth = mostrarPrecios ? (colPrecio - colDetalle - 10) : (pageWidth - colDetalle - rightMargin - 10)
     const detalleLines = doc.splitTextToSize(item.detalle, maxDetalleWidth)
     doc.text(detalleLines, colDetalle, y)
 
-    // Precio unitario
-    doc.text(`$${item.precio.toLocaleString()}`, colPrecio, y, { align: 'right' })
+    if (mostrarPrecios) {
+      // Precio unitario
+      doc.text(`$${item.precio.toLocaleString()}`, colPrecio, y, { align: 'right' })
 
-    // Subtotal
-    doc.setFont('helvetica', 'bold')
-    doc.text(`$${item.subtotal.toLocaleString()}`, colSubtotal, y, { align: 'right' })
+      // Subtotal
+      doc.setFont('helvetica', 'bold')
+      doc.text(`$${item.subtotal.toLocaleString()}`, colSubtotal, y, { align: 'right' })
+    }
 
     y += Math.max(8, detalleLines.length * 4 + 4)
 
@@ -206,19 +211,21 @@ export async function generarPDFPresupuesto(
     y = finalTotalY
   }
 
-  // Línea antes del total
-  doc.setLineWidth(0.5)
-  doc.setDrawColor(100, 116, 139)
-  doc.line(leftMargin, y - 5, pageWidth - rightMargin, y - 5)
+  if (mostrarPrecios) {
+    // Línea antes del total
+    doc.setLineWidth(0.5)
+    doc.setDrawColor(100, 116, 139)
+    doc.line(leftMargin, y - 5, pageWidth - rightMargin, y - 5)
 
-  // ===== TOTAL =====
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text('TOTAL:', pageWidth - rightMargin - 60, y)
-  doc.setFontSize(16)
-  doc.text(`$${presupuesto.total.toLocaleString()}`, pageWidth - rightMargin, y, { align: 'right' })
+    // ===== TOTAL =====
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TOTAL:', pageWidth - rightMargin - 60, y)
+    doc.setFontSize(16)
+    doc.text(`$${presupuesto.total.toLocaleString()}`, pageWidth - rightMargin, y, { align: 'right' })
 
-  y += 12
+    y += 12
+  }
 
   // ===== OBSERVACIONES (si existen) - Centradas sin título =====
   if (presupuesto.observaciones && presupuesto.observaciones.trim() !== '') {
