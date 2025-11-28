@@ -447,46 +447,41 @@ function ModalContenedor({
                   const mostrarSugerencias = sugerenciasActivas[index] && sugerencias.length > 0
 
                   return (
-                    <div key={index} className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-                      {/* Primera fila: Detalle */}
-                      <div className="relative">
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
-                          Detalle del producto *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={item.detalle}
-                          onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
-                          onBlur={() => setTimeout(() => cerrarSugerencias(index), 200)}
-                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
-                          placeholder="Ej: Cable HDMI, Teclado USB, etc."
-                          autoComplete="off"
-                        />
-                        
-                        {/* Lista de sugerencias autocompletado */}
-                        {mostrarSugerencias && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border-2 border-purple-400 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                            {sugerencias.map((sugerencia, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => seleccionarSugerencia(index, sugerencia)}
-                                className="w-full text-left px-4 py-3 hover:bg-purple-50 text-base text-slate-700 border-b border-slate-100 last:border-0 transition-colors font-medium"
-                              >
-                                <span className="font-bold text-purple-600 text-lg">📦</span> {sugerencia}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <div key={index} className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      {/* Una sola fila horizontal */}
+                      <div className="flex gap-2 items-start">
+                        {/* Detalle del producto */}
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            required
+                            value={item.detalle}
+                            onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
+                            onBlur={() => setTimeout(() => cerrarSugerencias(index), 200)}
+                            className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
+                            placeholder="Detalle del producto"
+                            autoComplete="off"
+                          />
+                          
+                          {/* Lista de sugerencias autocompletado */}
+                          {mostrarSugerencias && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border-2 border-purple-400 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                              {sugerencias.map((sugerencia, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => seleccionarSugerencia(index, sugerencia)}
+                                  className="w-full text-left px-4 py-3 hover:bg-purple-50 text-base text-slate-700 border-b border-slate-100 last:border-0 transition-colors font-medium"
+                                >
+                                  <span className="font-bold text-purple-600 text-lg">📦</span> {sugerencia}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Segunda fila: Cantidad, Costo y Moneda */}
-                      <div className="grid grid-cols-12 gap-2">
-                        <div className="col-span-3">
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Cantidad *
-                          </label>
+                        {/* Cantidad */}
+                        <div className="w-24">
                           <input
                             type="number"
                             required
@@ -494,14 +489,12 @@ function ModalContenedor({
                             value={item.cantidad}
                             onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
                             className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
-                            placeholder="1"
+                            placeholder="Cant."
                           />
                         </div>
                         
-                        <div className="col-span-5">
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Costo unitario
-                          </label>
+                        {/* Costo */}
+                        <div className="w-32">
                           <input
                             type="number"
                             min="0"
@@ -509,14 +502,12 @@ function ModalContenedor({
                             value={item.costo || ''}
                             onChange={(e) => actualizarItem(index, 'costo', e.target.value)}
                             className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
-                            placeholder="0.00"
+                            placeholder="Costo"
                           />
                         </div>
 
-                        <div className="col-span-3">
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Moneda
-                          </label>
+                        {/* Moneda */}
+                        <div className="w-24">
                           <select
                             value={item.moneda || 'ARS'}
                             onChange={(e) => actualizarItem(index, 'moneda', e.target.value)}
@@ -527,24 +518,16 @@ function ModalContenedor({
                           </select>
                         </div>
 
-                        <div className="col-span-1 flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => eliminarItem(index)}
-                            className="w-full p-2.5 text-red-600 hover:bg-red-50 rounded-md transition"
-                            title="Eliminar item"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
+                        {/* Botón eliminar */}
+                        <button
+                          type="button"
+                          onClick={() => eliminarItem(index)}
+                          className="p-2.5 text-red-600 hover:bg-red-50 rounded-md transition"
+                          title="Eliminar item"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
-
-                      {/* Mostrar subtotal si tiene costo */}
-                      {item.costo && item.costo > 0 && (
-                        <div className="text-right text-sm font-semibold text-purple-600">
-                          Subtotal: {item.moneda} ${(item.cantidad * item.costo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                      )}
                     </div>
                   )
                 })

@@ -80,11 +80,13 @@ export default function EstadisticasPage() {
   const [contenedores, setContenedores] = useState<Contenedor[]>([])
   const [alertasStock, setAlertasStock] = useState<AlertaStock[]>([])
   const [valorInventario, setValorInventario] = useState<ValorInventario>({ totalUSD: 0, totalARS: 0 })
+  const [precioDolar, setPrecioDolar] = useState<number>(1000) // Precio del dólar por defecto
   const [configuracion, setConfiguracion] = useState<ConfiguracionStock>({
     umbral_bajo: 5,
     mostrar_alertas: true
   })
   const [modalConfigAbierto, setModalConfigAbierto] = useState(false)
+  const [modalDolarAbierto, setModalDolarAbierto] = useState(false)
   
   const supabase = createClient()
 
@@ -320,10 +322,14 @@ export default function EstadisticasPage() {
           alertasStock={alertasStock}
           contenedores={contenedores}
           valorInventario={valorInventario}
+          precioDolar={precioDolar}
+          onPrecioDolarChange={setPrecioDolar}
           configuracion={configuracion}
           onConfigChange={setConfiguracion}
           modalConfigAbierto={modalConfigAbierto}
           setModalConfigAbierto={setModalConfigAbierto}
+          modalDolarAbierto={modalDolarAbierto}
+          setModalDolarAbierto={setModalDolarAbierto}
         />
       )}
 
@@ -515,18 +521,26 @@ function TabStock({
   alertasStock, 
   contenedores,
   valorInventario,
+  precioDolar,
+  onPrecioDolarChange,
   configuracion,
   onConfigChange,
   modalConfigAbierto,
-  setModalConfigAbierto
+  setModalConfigAbierto,
+  modalDolarAbierto,
+  setModalDolarAbierto
 }: { 
   alertasStock: AlertaStock[]
   contenedores: Contenedor[]
   valorInventario: ValorInventario
+  precioDolar: number
+  onPrecioDolarChange: (precio: number) => void
   configuracion: ConfiguracionStock
   onConfigChange: (config: ConfiguracionStock) => void
   modalConfigAbierto: boolean
   setModalConfigAbierto: (open: boolean) => void
+  modalDolarAbierto: boolean
+  setModalDolarAbierto: (open: boolean) => void
 }) {
   // Calcular productos consolidados
   const productosMap = new Map<string, { total: number; adelante: number; atras: number }>()
@@ -567,19 +581,28 @@ function TabStock({
 
   return (
     <>
-      {/* Header con botón de configuración */}
+      {/* Header con botones de configuración */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-900 flex items-center">
           <BarChart3 className="w-6 h-6 mr-2 text-purple-600" />
           Análisis de Inventario
         </h2>
-        <button
-          onClick={() => setModalConfigAbierto(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-        >
-          <Settings className="w-4 h-4" />
-          <span>Configurar Alertas</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setModalDolarAbierto(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Configurar Dólar</span>
+          </button>
+          <button
+            onClick={() => setModalConfigAbierto(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Configurar Alertas</span>
+          </button>
+        </div>
       </div>
 
       {/* Tarjetas de resumen de stock */}
@@ -631,7 +654,7 @@ function TabStock({
       </div>
 
       {/* Tarjetas de Valor del Inventario */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Valor en USD */}
         <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-2">
@@ -669,6 +692,26 @@ function TabStock({
           </div>
           <p className="text-xs text-blue-600 mt-2">
             Valor total del inventario en pesos argentinos
+          </p>
+        </div>
+
+        {/* Valor Total Combinado (USD convertido + ARS) */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-sm font-semibold text-purple-700 uppercase tracking-wide">
+                Valor Total
+              </p>
+              <p className="text-4xl font-black text-purple-900 mt-3">
+                ${((valorInventario.totalUSD * precioDolar) + valorInventario.totalARS).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-purple-200 p-4 rounded-full">
+              <DollarSign className="w-8 h-8 text-purple-700" />
+            </div>
+          </div>
+          <p className="text-xs text-purple-600 mt-2">
+            USD convertido a ARS (${precioDolar.toLocaleString()}) + ARS
           </p>
         </div>
 
@@ -854,6 +897,83 @@ function TabStock({
                 className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
               >
                 Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configuración del Dólar */}
+      {modalDolarAbierto && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="w-6 h-6 text-green-600" />
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Configurar Precio del Dólar
+                </h2>
+              </div>
+              <button 
+                onClick={() => setModalDolarAbierto(false)} 
+                className="text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Cotización del Dólar (ARS)
+                </label>
+                <p className="text-xs text-slate-500 mb-3">
+                  Ingresa el valor actual del dólar para calcular el valor total del inventario
+                </p>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-2xl font-bold">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={precioDolar}
+                    onChange={(e) => onPrecioDolarChange(parseFloat(e.target.value) || 1000)}
+                    className="w-full pl-10 pr-4 py-4 bg-white border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-900 font-bold text-center text-3xl"
+                    placeholder="1000"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 space-y-2">
+                <p className="text-sm font-semibold text-green-900">
+                  Vista Previa del Cálculo:
+                </p>
+                <div className="space-y-1 text-xs text-green-800">
+                  <p>USD ${valorInventario.totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2 })} × ${precioDolar.toLocaleString()} = <span className="font-bold">${(valorInventario.totalUSD * precioDolar).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span></p>
+                  <p>ARS ${valorInventario.totalARS.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                  <div className="border-t border-green-300 pt-2 mt-2">
+                    <p className="font-bold text-base text-green-900">
+                      Total: ${((valorInventario.totalUSD * precioDolar) + valorInventario.totalARS).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Tip:</strong> Actualiza este valor regularmente para mantener cálculos precisos del valor de tu inventario.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setModalDolarAbierto(false)}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+              >
+                Guardar Cotización
               </button>
             </div>
           </div>
