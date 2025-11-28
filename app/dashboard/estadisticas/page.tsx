@@ -374,13 +374,6 @@ export default function EstadisticasPage() {
           setModalDolarAbierto={setModalDolarAbierto}
         />
       )}
-
-      {/* Información adicional */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Nota:</strong> Las estadísticas se actualizan en tiempo real con cada cambio.
-        </p>
-      </div>
     </div>
   )
 }
@@ -625,8 +618,9 @@ function TabStock({
 
   return (
     <>
+      <div className="h-screen flex flex-col overflow-hidden">
       {/* Header con botones de configuración */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 shrink-0">
         <h2 className="text-2xl font-bold text-slate-900 flex items-center">
           <BarChart3 className="w-6 h-6 mr-2 text-purple-600" />
           Análisis de Inventario
@@ -634,238 +628,137 @@ function TabStock({
         <div className="flex space-x-3">
           <button
             onClick={() => setModalDolarAbierto(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
           >
             <DollarSign className="w-4 h-4" />
-            <span>Configurar Dólar</span>
+            <span>Dólar</span>
           </button>
           <button
             onClick={() => setModalConfigAbierto(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
           >
             <Settings className="w-4 h-4" />
-            <span>Configurar Alertas</span>
+            <span>Alertas</span>
           </button>
         </div>
       </div>
 
-      {/* Tarjetas de resumen de stock */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Total Productos */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Productos Únicos</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {totalProductos}
-              </p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <Package className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Total Unidades */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Total Unidades</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {valorTotalStock}
-              </p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <Archive className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Productos con Stock Bajo */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Stock Bajo</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {productosConStockBajo}
-              </p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tarjetas de Valor del Inventario */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Valor en USD */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
-                Valor Total en USD
-              </p>
-              <p className="text-4xl font-black text-green-900 mt-3">
-                ${valorInventario.totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-green-200 p-4 rounded-full">
-              <DollarSign className="w-8 h-8 text-green-700" />
-            </div>
-          </div>
-          <p className="text-xs text-green-600 mt-2">
-            Valor total del inventario en dólares estadounidenses
-          </p>
-        </div>
-
-        {/* Valor en ARS */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
-                Valor Total en ARS
-              </p>
-              <p className="text-4xl font-black text-blue-900 mt-3">
-                ${valorInventario.totalARS.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-blue-200 p-4 rounded-full">
-              <DollarSign className="w-8 h-8 text-blue-700" />
-            </div>
-          </div>
-          <p className="text-xs text-blue-600 mt-2">
-            Valor total del inventario en pesos argentinos
-          </p>
-        </div>
-
-        {/* Valor Total Combinado (USD convertido + ARS) */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-sm font-semibold text-purple-700 uppercase tracking-wide">
-                Valor Total
-              </p>
-              <p className="text-4xl font-black text-purple-900 mt-3">
-                ${((valorInventario.totalUSD * precioDolar) + valorInventario.totalARS).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-purple-200 p-4 rounded-full">
-              <DollarSign className="w-8 h-8 text-purple-700" />
-            </div>
-          </div>
-          <p className="text-xs text-purple-600 mt-2">
-            USD convertido a ARS (${precioDolar.toLocaleString()}) + ARS
-          </p>
-        </div>
-
-        {/* Umbral Configurado */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Umbral de Alerta</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                ≤ {configuracion.umbral_bajo}
-              </p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <AlertCircle className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Alertas de Stock Bajo */}
-      {alertasStock.length > 0 && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-8">
-          <div className="flex items-center mb-4">
-            <AlertTriangle className="w-6 h-6 text-red-600 mr-2" />
-            <h3 className="text-xl font-bold text-red-900">
-              ⚠️ Alertas de Stock Bajo ({alertasStock.length})
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {alertasStock.map((alerta, idx) => (
-              <div key={idx} className="bg-white rounded-lg p-4 border border-red-200">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-900 capitalize text-lg">
-                      {alerta.nombre_producto}
-                    </h4>
-                    <p className="text-sm text-slate-600 mt-1">
-                      Stock total: <span className="font-semibold text-red-600">{alerta.cantidad_total} unidades</span>
-                    </p>
-                    <div className="flex space-x-4 mt-2 text-sm">
-                      <span className="text-slate-600">
-                        📦 Adelante: <span className="font-medium">{alerta.cantidad_adelante}</span>
-                      </span>
-                      <span className="text-slate-600">
-                        📦 Atrás: <span className="font-medium">{alerta.cantidad_atras}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div className="bg-red-100 px-3 py-1 rounded-full">
-                    <span className="text-xs font-bold text-red-700">BAJO</span>
-                  </div>
-                </div>
+      {/* Contenido principal con scroll */}
+      <div className="flex-1 overflow-auto">
+        {/* Tarjetas de resumen compactas */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          {/* Total Productos */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-slate-600">Productos</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{totalProductos}</p>
               </div>
-            ))}
+              <div className="bg-purple-100 p-2 rounded-full">
+                <Package className="w-5 h-5 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Unidades */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-slate-600">Unidades</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{valorTotalStock}</p>
+              </div>
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Archive className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Stock Bajo */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-slate-600">Stock Bajo</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">{productosConStockBajo}</p>
+              </div>
+              <div className="bg-red-100 p-2 rounded-full">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Lista de Todos los Productos con Cantidades */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
-          <Package className="w-5 h-5 mr-2 text-purple-600" />
-          Inventario Completo por Producto
-        </h3>
-        
-        {productos.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <Package className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p>No hay productos en el inventario</p>
+        {/* Tarjetas de Valor - Más compactas */}
+        <div className="grid grid-cols-4 gap-4 mb-4">
+          {/* Valor en USD */}
+          <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg shadow p-4">
+            <p className="text-xs font-semibold text-green-700 uppercase">USD</p>
+            <p className="text-xl font-bold text-green-900 mt-2">
+              ${valorInventario.totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
           </div>
-        ) : (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {productos.map((producto, idx) => {
-              const esStockBajo = producto.total <= configuracion.umbral_bajo
-              
-              return (
-                <div 
-                  key={idx} 
-                  className={`flex justify-between items-center p-4 rounded-lg border transition ${
-                    esStockBajo 
-                      ? 'bg-red-50 border-red-200' 
-                      : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-semibold text-slate-900 capitalize">
-                        {producto.nombre}
-                      </h4>
-                      {esStockBajo && (
-                        <AlertTriangle className="w-4 h-4 text-red-600" />
-                      )}
-                    </div>
-                    <div className="flex space-x-4 mt-1 text-sm text-slate-600">
-                      <span>Adelante: <span className="font-medium">{producto.adelante}</span></span>
-                      <span>Atrás: <span className="font-medium">{producto.atras}</span></span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-2xl font-bold ${esStockBajo ? 'text-red-600' : 'text-purple-600'}`}>
-                      {producto.total}
-                    </p>
-                    <p className="text-xs text-slate-500">unidades</p>
-                  </div>
-                </div>
-              )
-            })}
+
+          {/* Valor en ARS */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg shadow p-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase">ARS</p>
+            <p className="text-xl font-bold text-blue-900 mt-2">
+              ${valorInventario.totalARS.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
+          </div>
+
+          {/* Valor Total */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg shadow p-4">
+            <p className="text-xs font-semibold text-purple-700 uppercase">Total (ARS)</p>
+            <p className="text-xl font-bold text-purple-900 mt-2">
+              ${((valorInventario.totalUSD * precioDolar) + valorInventario.totalARS).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
+          </div>
+
+          {/* Umbral */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-xs font-medium text-slate-600">Umbral</p>
+            <p className="text-xl font-bold text-slate-900 mt-2">≤ {configuracion.umbral_bajo}</p>
+          </div>
+        </div>
+
+        {/* Alertas de Stock Bajo - Tabla con scroll interno */}
+        {alertasStock.length > 0 && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="bg-red-50 border-b-2 border-red-200 p-3">
+              <div className="flex items-center">
+                <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+                <h3 className="text-base font-bold text-red-900">
+                  ⚠️ Alertas de Stock Bajo ({alertasStock.length})
+                </h3>
+              </div>
+            </div>
+            <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+                  <tr>
+                    <th className="text-left py-2 px-4 font-semibold text-slate-700 text-sm">Producto</th>
+                    <th className="text-center py-2 px-4 font-semibold text-slate-700 text-sm">Adelante</th>
+                    <th className="text-center py-2 px-4 font-semibold text-slate-700 text-sm">Atrás</th>
+                    <th className="text-center py-2 px-4 font-semibold text-slate-700 text-sm">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alertasStock.map((alerta, idx) => (
+                    <tr key={idx} className="border-b border-slate-100 hover:bg-red-50 transition">
+                      <td className="py-2 px-4 font-medium text-slate-900 capitalize text-sm">{alerta.nombre_producto}</td>
+                      <td className="py-2 px-4 text-center text-slate-700 text-sm">{alerta.cantidad_adelante}</td>
+                      <td className="py-2 px-4 text-center text-slate-700 text-sm">{alerta.cantidad_atras}</td>
+                      <td className="py-2 px-4 text-center">
+                        <span className="font-bold text-red-600 text-sm">{alerta.cantidad_total}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
+    </div>
 
       {/* Modal de Configuración */}
       {modalConfigAbierto && (

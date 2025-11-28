@@ -247,70 +247,73 @@ export default function StockPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-12">
-      <PageHeader
-        title="Gestión de Stock"
-        gradient="purple"
-        actions={
-          <div className="flex space-x-3">
-            <button
-              onClick={handleExportarPDF}
-              disabled={contenedores.length === 0}
-              className="flex items-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Exportar PDF</span>
-            </button>
-            <button
-              onClick={() => {
-                setEditingContenedor(null)
-                setShowModal(true)
-              }}
-              className="flex items-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Nuevo Contenedor</span>
-            </button>
-          </div>
-        }
-      />
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="shrink-0">
+        <PageHeader
+          title="Gestión de Stock"
+          gradient="purple"
+          actions={
+            <div className="flex space-x-3">
+              <button
+                onClick={handleExportarPDF}
+                disabled={contenedores.length === 0}
+                className="flex items-center space-x-2 bg-white text-purple-600 px-3 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <FileText className="w-4 h-4" />
+                <span>PDF</span>
+              </button>
+              <button
+                onClick={() => {
+                  setEditingContenedor(null)
+                  setShowModal(true)
+                }}
+                className="flex items-center space-x-2 bg-white text-purple-600 px-3 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nuevo</span>
+              </button>
+            </div>
+          }
+        />
 
-      {/* Tabs para Stock Adelante / Stock Atrás */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="mb-6 border-b border-slate-200">
-          <div className="flex space-x-1">
-            <button
-              onClick={() => setTabActivo('adelante')}
-              className={`px-6 py-3 font-medium text-sm transition-all relative ${
-                tabActivo === 'adelante'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <Package className="w-4 h-4" />
-                <span>Stock Adelante</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setTabActivo('atras')}
-              className={`px-6 py-3 font-medium text-sm transition-all relative ${
-                tabActivo === 'atras'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <Package className="w-4 h-4" />
-                <span>Stock Atrás</span>
-              </div>
-            </button>
+        {/* Tabs para Stock Adelante / Stock Atrás */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="border-b border-slate-200">
+            <div className="flex space-x-1">
+              <button
+                onClick={() => setTabActivo('adelante')}
+                className={`px-6 py-2 font-medium text-sm transition-all relative ${
+                  tabActivo === 'adelante'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Package className="w-4 h-4" />
+                  <span>Adelante</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setTabActivo('atras')}
+                className={`px-6 py-2 font-medium text-sm transition-all relative ${
+                  tabActivo === 'atras'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Package className="w-4 h-4" />
+                  <span>Atrás</span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Lista de Contenedores */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      {/* Lista de Contenedores con scroll */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {contenedores.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
@@ -393,6 +396,7 @@ export default function StockPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* Modal para Agregar/Editar Contenedor */}
