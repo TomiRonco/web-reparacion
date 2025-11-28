@@ -149,10 +149,14 @@ export interface PresupuestoFormData {
 }
 
 // Tipos para Stock
+export type MonedaStock = 'USD' | 'ARS'
+
 export interface ItemStock {
   id?: string
   detalle: string
   cantidad: number
+  costo?: number
+  moneda?: MonedaStock
 }
 
 export type UbicacionStock = 'adelante' | 'atras'

@@ -25,6 +25,8 @@ type TabType = 'reparaciones' | 'stock'
 interface ItemStock {
   detalle: string
   cantidad: number
+  costo?: number
+  moneda?: 'USD' | 'ARS'
 }
 
 interface Contenedor {
@@ -40,6 +42,11 @@ interface AlertaStock {
   cantidad_adelante: number
   cantidad_atras: number
   umbral: number
+}
+
+interface ValorInventario {
+  totalUSD: number
+  totalARS: number
 }
 
 interface ConfiguracionStock {
@@ -72,6 +79,7 @@ export default function EstadisticasPage() {
   // Estados para stock
   const [contenedores, setContenedores] = useState<Contenedor[]>([])
   const [alertasStock, setAlertasStock] = useState<AlertaStock[]>([])
+  const [valorInventario, setValorInventario] = useState<ValorInventario>({ totalUSD: 0, totalARS: 0 })
   const [configuracion, setConfiguracion] = useState<ConfiguracionStock>({
     umbral_bajo: 5,
     mostrar_alertas: true
@@ -97,11 +105,25 @@ export default function EstadisticasPage() {
     // Calcular productos consolidados y alertas
     const productosMap = new Map<string, { total: number; adelante: number; atras: number }>()
     
+    // Variables para calcular valor total del inventario
+    let totalUSD = 0
+    let totalARS = 0
+    
     contenedoresData.forEach((contenedor: Contenedor) => {
       if (contenedor.items && Array.isArray(contenedor.items)) {
         contenedor.items.forEach((item: ItemStock) => {
           const nombre = item.detalle.toLowerCase().trim()
           const cantidad = item.cantidad || 0
+          
+          // Calcular valor del inventario
+          if (item.costo && item.costo > 0) {
+            const valorItem = item.cantidad * item.costo
+            if (item.moneda === 'USD') {
+              totalUSD += valorItem
+            } else {
+              totalARS += valorItem
+            }
+          }
           
           const existing = productosMap.get(nombre)
           if (existing) {
@@ -121,6 +143,9 @@ export default function EstadisticasPage() {
         })
       }
     })
+
+    // Actualizar valor del inventario
+    setValorInventario({ totalUSD, totalARS })
 
     // Generar alertas de stock bajo
     const alertas: AlertaStock[] = []
@@ -294,6 +319,7 @@ export default function EstadisticasPage() {
         <TabStock 
           alertasStock={alertasStock}
           contenedores={contenedores}
+          valorInventario={valorInventario}
           configuracion={configuracion}
           onConfigChange={setConfiguracion}
           modalConfigAbierto={modalConfigAbierto}
@@ -488,6 +514,7 @@ function TabReparaciones({ estadisticas }: { estadisticas: EstadisticasData }) {
 function TabStock({ 
   alertasStock, 
   contenedores,
+  valorInventario,
   configuracion,
   onConfigChange,
   modalConfigAbierto,
@@ -495,6 +522,7 @@ function TabStock({
 }: { 
   alertasStock: AlertaStock[]
   contenedores: Contenedor[]
+  valorInventario: ValorInventario
   configuracion: ConfiguracionStock
   onConfigChange: (config: ConfiguracionStock) => void
   modalConfigAbierto: boolean
@@ -555,7 +583,7 @@ function TabStock({
       </div>
 
       {/* Tarjetas de resumen de stock */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {/* Total Productos */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -599,6 +627,49 @@ function TabStock({
               <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Tarjetas de Valor del Inventario */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Valor en USD */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                Valor Total en USD
+              </p>
+              <p className="text-4xl font-black text-green-900 mt-3">
+                ${valorInventario.totalUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-green-200 p-4 rounded-full">
+              <DollarSign className="w-8 h-8 text-green-700" />
+            </div>
+          </div>
+          <p className="text-xs text-green-600 mt-2">
+            Valor total del inventario en dólares estadounidenses
+          </p>
+        </div>
+
+        {/* Valor en ARS */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
+                Valor Total en ARS
+              </p>
+              <p className="text-4xl font-black text-blue-900 mt-3">
+                ${valorInventario.totalARS.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-blue-200 p-4 rounded-full">
+              <DollarSign className="w-8 h-8 text-blue-700" />
+            </div>
+          </div>
+          <p className="text-xs text-blue-600 mt-2">
+            Valor total del inventario en pesos argentinos
+          </p>
         </div>
 
         {/* Umbral Configurado */}

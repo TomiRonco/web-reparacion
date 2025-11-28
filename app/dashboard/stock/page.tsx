@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Package, FileText } from 'lucide-react'
-import type { Contenedor, ItemStock, ContenedorFormData, UbicacionStock } from '@/types/database'
+import type { Contenedor, ItemStock, ContenedorFormData, UbicacionStock, MonedaStock } from '@/types/database'
 import { generarPDFStock } from '@/lib/pdf-stock'
 import PageHeader from '@/components/PageHeader'
 
@@ -237,9 +237,21 @@ export default function StockPage() {
                   {contenedor.items && contenedor.items.length > 0 ? (
                     <div className="space-y-2">
                       {contenedor.items.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                          <span className="text-sm text-slate-700 flex-1">{item.detalle}</span>
-                          <span className="text-sm font-semibold text-purple-600 ml-2">x{item.cantidad}</span>
+                        <div key={index} className="py-2 border-b border-slate-100 last:border-0">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm text-slate-700 flex-1">{item.detalle}</span>
+                            <span className="text-sm font-semibold text-purple-600 ml-2">x{item.cantidad}</span>
+                          </div>
+                          {item.costo && item.costo > 0 && (
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-xs text-slate-500">
+                                {item.moneda} ${item.costo.toLocaleString('es-AR', { minimumFractionDigits: 2 })} c/u
+                              </span>
+                              <span className="text-xs font-bold text-green-600">
+                                {item.moneda} ${(item.cantidad * item.costo).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -320,14 +332,16 @@ function ModalContenedor({
   const agregarItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { detalle: '', cantidad: 1 }]
+      items: [...formData.items, { detalle: '', cantidad: 1, costo: 0, moneda: 'ARS' }]
     })
   }
 
-  const actualizarItem = (index: number, field: keyof ItemStock, value: string | number) => {
+  const actualizarItem = (index: number, field: keyof ItemStock, value: string | number | MonedaStock) => {
     const nuevosItems = [...formData.items]
-    if (field === 'cantidad') {
+    if (field === 'cantidad' || field === 'costo') {
       nuevosItems[index][field] = Number(value)
+    } else if (field === 'moneda') {
+      nuevosItems[index][field] = value as MonedaStock
     } else {
       nuevosItems[index][field] = value as string
     }
@@ -433,8 +447,12 @@ function ModalContenedor({
                   const mostrarSugerencias = sugerenciasActivas[index] && sugerencias.length > 0
 
                   return (
-                    <div key={index} className="flex space-x-2 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <div className="flex-1 relative">
+                    <div key={index} className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                      {/* Primera fila: Detalle */}
+                      <div className="relative">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                          Detalle del producto *
+                        </label>
                         <input
                           type="text"
                           required
@@ -442,7 +460,7 @@ function ModalContenedor({
                           onChange={(e) => actualizarItem(index, 'detalle', e.target.value)}
                           onBlur={() => setTimeout(() => cerrarSugerencias(index), 200)}
                           className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
-                          placeholder="Detalle del producto"
+                          placeholder="Ej: Cable HDMI, Teclado USB, etc."
                           autoComplete="off"
                         />
                         
@@ -462,25 +480,71 @@ function ModalContenedor({
                           </div>
                         )}
                       </div>
-                      <div className="w-24">
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          value={item.cantidad}
-                          onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
-                          placeholder="Cant."
-                        />
+
+                      {/* Segunda fila: Cantidad, Costo y Moneda */}
+                      <div className="grid grid-cols-12 gap-2">
+                        <div className="col-span-3">
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Cantidad *
+                          </label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            value={item.cantidad}
+                            onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
+                            placeholder="1"
+                          />
+                        </div>
+                        
+                        <div className="col-span-5">
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Costo unitario
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.costo || ''}
+                            onChange={(e) => actualizarItem(index, 'costo', e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-medium shadow-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+
+                        <div className="col-span-3">
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Moneda
+                          </label>
+                          <select
+                            value={item.moneda || 'ARS'}
+                            onChange={(e) => actualizarItem(index, 'moneda', e.target.value)}
+                            className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold shadow-sm"
+                          >
+                            <option value="ARS">ARS</option>
+                            <option value="USD">USD</option>
+                          </select>
+                        </div>
+
+                        <div className="col-span-1 flex items-end">
+                          <button
+                            type="button"
+                            onClick={() => eliminarItem(index)}
+                            className="w-full p-2.5 text-red-600 hover:bg-red-50 rounded-md transition"
+                            title="Eliminar item"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => eliminarItem(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition"
-                        title="Eliminar item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                      {/* Mostrar subtotal si tiene costo */}
+                      {item.costo && item.costo > 0 && (
+                        <div className="text-right text-sm font-semibold text-purple-600">
+                          Subtotal: {item.moneda} ${(item.cantidad * item.costo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
                     </div>
                   )
                 })
