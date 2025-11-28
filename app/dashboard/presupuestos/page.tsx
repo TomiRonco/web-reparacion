@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { generarPDFPresupuesto } from '@/lib/pdf-presupuesto'
 import type { Presupuesto, PresupuestoItem, ConfiguracionLocal } from '@/types/database'
-import { Plus, X, Download, Trash2 } from 'lucide-react'
+import { Plus, X, Download, Trash2, Edit } from 'lucide-react'
 
 export default function PresupuestosPage() {
   const supabase = createClient()
@@ -13,6 +13,7 @@ export default function PresupuestosPage() {
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [presupuestoEditando, setPresupuestoEditando] = useState<Presupuesto | null>(null)
 
   // Form state
   const [clienteNombre, setClienteNombre] = useState('')
@@ -100,7 +101,7 @@ export default function PresupuestosPage() {
     return items.reduce((total, item) => total + item.subtotal, 0)
   }
 
-  // Guardar presupuesto
+  // Guardar presupuesto (crear o actualizar)
   const guardarPresupuesto = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -113,39 +114,68 @@ export default function PresupuestosPage() {
         return
       }
 
-      // Obtener el siguiente número de presupuesto
-      const { data: ultimoPresupuesto } = await supabase
-        .from('presupuestos')
-        .select('numero_presupuesto')
-        .eq('user_id', user.id)
-        .order('numero_presupuesto', { ascending: false })
-        .limit(1)
-        .single()
+      // Si estamos editando, actualizar el presupuesto existente
+      if (presupuestoEditando) {
+        const presupuestoActualizado = {
+          cliente_nombre: clienteNombre.trim() || null,
+          cliente_cuit: clienteCuit.trim() || null,
+          cliente_direccion: clienteDireccion.trim() || null,
+          observaciones: observaciones.trim() || null,
+          items: itemsValidos,
+          mostrar_precios: mostrarPrecios,
+          total: mostrarPrecios ? calcularTotal() : 0,
+        }
 
-      const nuevoNumero = (ultimoPresupuesto?.numero_presupuesto || 0) + 1
+        const { error } = await supabase
+          .from('presupuestos')
+          .update(presupuestoActualizado)
+          .eq('id', presupuestoEditando.id)
 
-      // Crear presupuesto
-      const nuevoPresupuesto = {
-        user_id: user.id,
-        numero_presupuesto: nuevoNumero,
-        cliente_nombre: clienteNombre.trim() || null,
-        cliente_cuit: clienteCuit.trim() || null,
-        cliente_direccion: clienteDireccion.trim() || null,
-        observaciones: observaciones.trim() || null,
-        items: itemsValidos,
-        mostrar_precios: mostrarPrecios,
-        total: mostrarPrecios ? calcularTotal() : 0,
-        fecha_creacion: new Date().toISOString()
-      }
+        if (error) {
+          console.error('Error al actualizar presupuesto:', error)
+          alert('Error al actualizar el presupuesto')
+          return
+        }
 
-      const { error } = await supabase
-        .from('presupuestos')
-        .insert(nuevoPresupuesto)
+        alert('Presupuesto actualizado exitosamente')
+      } else {
+        // Crear nuevo presupuesto
+        // Obtener el siguiente número de presupuesto
+        const { data: ultimoPresupuesto } = await supabase
+          .from('presupuestos')
+          .select('numero_presupuesto')
+          .eq('user_id', user.id)
+          .order('numero_presupuesto', { ascending: false })
+          .limit(1)
+          .single()
 
-      if (error) {
-        console.error('Error al guardar presupuesto:', error)
-        alert('Error al guardar el presupuesto')
-        return
+        const nuevoNumero = (ultimoPresupuesto?.numero_presupuesto || 0) + 1
+
+        // Crear presupuesto
+        const nuevoPresupuesto = {
+          user_id: user.id,
+          numero_presupuesto: nuevoNumero,
+          cliente_nombre: clienteNombre.trim() || null,
+          cliente_cuit: clienteCuit.trim() || null,
+          cliente_direccion: clienteDireccion.trim() || null,
+          observaciones: observaciones.trim() || null,
+          items: itemsValidos,
+          mostrar_precios: mostrarPrecios,
+          total: mostrarPrecios ? calcularTotal() : 0,
+          fecha_creacion: new Date().toISOString()
+        }
+
+        const { error } = await supabase
+          .from('presupuestos')
+          .insert(nuevoPresupuesto)
+
+        if (error) {
+          console.error('Error al guardar presupuesto:', error)
+          alert('Error al guardar el presupuesto')
+          return
+        }
+
+        alert('Presupuesto guardado exitosamente')
       }
 
       // Limpiar formulario
@@ -156,11 +186,9 @@ export default function PresupuestosPage() {
 
       // Cerrar modal
       setModalAbierto(false)
-
-      alert('Presupuesto guardado exitosamente')
     } catch (error) {
       console.error('Error:', error)
-      alert('Error al guardar el presupuesto')
+      alert('Error al procesar el presupuesto')
     }
   }
 
@@ -172,6 +200,19 @@ export default function PresupuestosPage() {
     setObservaciones('')
     setItems([{ cantidad: 1, detalle: '', precio: 0, subtotal: 0 }])
     setMostrarPrecios(true)
+    setPresupuestoEditando(null)
+  }
+
+  // Abrir modal para editar presupuesto
+  const abrirEditar = (presupuesto: Presupuesto) => {
+    setPresupuestoEditando(presupuesto)
+    setClienteNombre(presupuesto.cliente_nombre || '')
+    setClienteCuit(presupuesto.cliente_cuit || '')
+    setClienteDireccion(presupuesto.cliente_direccion || '')
+    setObservaciones(presupuesto.observaciones || '')
+    setItems(presupuesto.items)
+    setMostrarPrecios(presupuesto.mostrar_precios)
+    setModalAbierto(true)
   }
 
   // Generar PDF de un presupuesto guardado
@@ -286,8 +327,15 @@ export default function PresupuestosPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          onClick={() => descargarPDF(presupuesto)}
+                          onClick={() => abrirEditar(presupuesto)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
+                          title="Editar"
+                        >
+                          <Edit className="w-5 h-5 inline" />
+                        </button>
+                        <button
+                          onClick={() => descargarPDF(presupuesto)}
+                          className="text-green-600 hover:text-green-900 mr-3"
                           title="Descargar PDF"
                         >
                           <Download className="w-5 h-5 inline" />
@@ -351,11 +399,18 @@ export default function PresupuestosPage() {
 
                   <div className="flex space-x-2 pt-3 border-t border-gray-200">
                     <button
-                      onClick={() => descargarPDF(presupuesto)}
+                      onClick={() => abrirEditar(presupuesto)}
                       className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
+                      <Edit className="w-4 h-4" />
+                      <span className="text-sm font-medium">Editar</span>
+                    </button>
+                    <button
+                      onClick={() => descargarPDF(presupuesto)}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                    >
                       <Download className="w-4 h-4" />
-                      <span className="text-sm font-medium">Descargar PDF</span>
+                      <span className="text-sm font-medium">PDF</span>
                     </button>
                     <button
                       onClick={() => eliminarPresupuesto(presupuesto.id)}
@@ -372,14 +427,19 @@ export default function PresupuestosPage() {
         )}
       </div>
 
-      {/* Modal de Nuevo Presupuesto */}
+      {/* Modal de Nuevo/Editar Presupuesto */}
       {modalAbierto && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
             <div className="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-2xl font-bold text-slate-900">Nuevo Presupuesto</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                {presupuestoEditando ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}
+              </h2>
               <button 
-                onClick={() => setModalAbierto(false)} 
+                onClick={() => {
+                  setModalAbierto(false)
+                  limpiarFormulario()
+                }} 
                 className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-6 h-6" />
@@ -624,7 +684,7 @@ export default function PresupuestosPage() {
                 onClick={guardarPresupuesto}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
               >
-                Guardar Presupuesto
+                {presupuestoEditando ? 'Actualizar Presupuesto' : 'Guardar Presupuesto'}
               </button>
             </div>
           </div>
