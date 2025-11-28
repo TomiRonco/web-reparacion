@@ -90,6 +90,46 @@ export default function EstadisticasPage() {
   
   const supabase = createClient()
 
+  // Cargar configuración incluyendo precio del dólar
+  const cargarConfiguracion = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: configData } = await supabase
+      .from('configuracion_local')
+      .select('precio_dolar')
+      .eq('user_id', user.id)
+      .single()
+
+    if (configData?.precio_dolar) {
+      setPrecioDolar(configData.precio_dolar)
+    }
+  }
+
+  // Guardar precio del dólar
+  const guardarPrecioDolar = async (nuevoPrecio: number) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // Intentar actualizar primero
+    const { error: updateError } = await supabase
+      .from('configuracion_local')
+      .update({ precio_dolar: nuevoPrecio })
+      .eq('user_id', user.id)
+
+    // Si no existe el registro, crearlo
+    if (updateError) {
+      await supabase
+        .from('configuracion_local')
+        .insert({
+          user_id: user.id,
+          precio_dolar: nuevoPrecio
+        })
+    }
+
+    setPrecioDolar(nuevoPrecio)
+  }
+
   const fetchEstadisticasStock = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -249,6 +289,7 @@ export default function EstadisticasPage() {
   }
 
   useEffect(() => {
+    cargarConfiguracion()
     fetchEstadisticas()
     fetchEstadisticasStock()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -324,6 +365,7 @@ export default function EstadisticasPage() {
           valorInventario={valorInventario}
           precioDolar={precioDolar}
           onPrecioDolarChange={setPrecioDolar}
+          onGuardarPrecioDolar={guardarPrecioDolar}
           configuracion={configuracion}
           onConfigChange={setConfiguracion}
           modalConfigAbierto={modalConfigAbierto}
@@ -523,6 +565,7 @@ function TabStock({
   valorInventario,
   precioDolar,
   onPrecioDolarChange,
+  onGuardarPrecioDolar,
   configuracion,
   onConfigChange,
   modalConfigAbierto,
@@ -535,6 +578,7 @@ function TabStock({
   valorInventario: ValorInventario
   precioDolar: number
   onPrecioDolarChange: (precio: number) => void
+  onGuardarPrecioDolar: (precio: number) => void
   configuracion: ConfiguracionStock
   onConfigChange: (config: ConfiguracionStock) => void
   modalConfigAbierto: boolean
@@ -970,7 +1014,10 @@ function TabStock({
 
             <div className="p-6 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setModalDolarAbierto(false)}
+                onClick={async () => {
+                  await onGuardarPrecioDolar(precioDolar)
+                  setModalDolarAbierto(false)
+                }}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
               >
                 Guardar Cotización

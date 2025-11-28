@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS configuracion_local (
   instagram TEXT,
   whatsapp TEXT,
   horarios TEXT,
+  precio_dolar NUMERIC(10, 2) DEFAULT 1000.00,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
