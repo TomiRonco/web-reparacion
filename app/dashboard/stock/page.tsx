@@ -43,7 +43,30 @@ export default function StockPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const itemsConPrecioModificado: Array<{detalle: string, costo: number, moneda: MonedaStock}> = []
+    const itemsSinPrecio: string[] = []
+    
     if (editingContenedor) {
+      // Si estamos editando, verificar TODOS los items con precio para sincronizar
+      formData.items.forEach(itemNuevo => {
+        const itemOriginal = editingContenedor.items.find(
+          item => item.detalle.toLowerCase() === itemNuevo.detalle.toLowerCase()
+        )
+        
+        // Si el item tiene precio, sincronizarlo (sin importar si cambió o no)
+        if (itemNuevo.costo && itemNuevo.costo > 0) {
+          itemsConPrecioModificado.push({
+            detalle: itemNuevo.detalle.toLowerCase(),
+            costo: itemNuevo.costo,
+            moneda: itemNuevo.moneda || 'ARS'
+          })
+        }
+        // Si el precio se eliminó
+        else if (itemOriginal && itemOriginal.costo && itemOriginal.costo > 0) {
+          itemsSinPrecio.push(itemNuevo.detalle.toLowerCase())
+        }
+      })
+
       // Actualizar contenedor existente
       const { error } = await supabase
         .from('contenedores')
@@ -59,7 +82,17 @@ export default function StockPage() {
         return
       }
     } else {
-      // Crear nuevo contenedor
+      // Crear nuevo contenedor - también detectar items con precio para sincronizar
+      formData.items.forEach(item => {
+        if (item.costo && item.costo > 0) {
+          itemsConPrecioModificado.push({
+            detalle: item.detalle.toLowerCase(),
+            costo: item.costo,
+            moneda: item.moneda || 'ARS'
+          })
+        }
+      })
+
       const { error } = await supabase
         .from('contenedores')
         .insert({
@@ -75,9 +108,101 @@ export default function StockPage() {
       }
     }
 
+    // Sincronizar precios modificados en todos los contenedores
+    if (itemsConPrecioModificado.length > 0) {
+      console.log('Sincronizando precios:', itemsConPrecioModificado)
+      await sincronizarPreciosEnTodasUbicaciones(user.id, itemsConPrecioModificado)
+    }
+
+    // Si hay items con precios eliminados, eliminar precios en todos los contenedores
+    if (itemsSinPrecio.length > 0) {
+      console.log('Eliminando precios:', itemsSinPrecio)
+      await eliminarPreciosDeTodasUbicaciones(user.id, itemsSinPrecio)
+    }
+
+    // Recargar todos los contenedores para reflejar cambios en ambas ubicaciones
     await fetchContenedores()
     setShowModal(false)
     setEditingContenedor(null)
+  }
+
+  const eliminarPreciosDeTodasUbicaciones = async (userId: string, detallesSinPrecio: string[]) => {
+    // Obtener todos los contenedores del usuario
+    const { data: todosContenedores, error: errorFetch } = await supabase
+      .from('contenedores')
+      .select('*')
+      .eq('user_id', userId)
+
+    if (errorFetch || !todosContenedores) return
+
+    // Actualizar cada contenedor eliminando los precios de los items especificados
+    for (const contenedor of todosContenedores) {
+      let huboChangios = false
+      const itemsActualizados = contenedor.items.map((item: ItemStock) => {
+        if (detallesSinPrecio.includes(item.detalle.toLowerCase())) {
+          huboChangios = true
+          return { ...item, costo: 0, moneda: 'ARS' as MonedaStock }
+        }
+        return item
+      })
+
+      // Solo actualizar si hubo cambios
+      if (huboChangios) {
+        await supabase
+          .from('contenedores')
+          .update({ items: itemsActualizados })
+          .eq('id', contenedor.id)
+      }
+    }
+  }
+
+  const sincronizarPreciosEnTodasUbicaciones = async (
+    userId: string, 
+    itemsConPrecio: Array<{detalle: string, costo: number, moneda: MonedaStock}>
+  ) => {
+    // Obtener todos los contenedores del usuario
+    const { data: todosContenedores, error: errorFetch } = await supabase
+      .from('contenedores')
+      .select('*')
+      .eq('user_id', userId)
+
+    if (errorFetch || !todosContenedores) {
+      console.error('Error al obtener contenedores:', errorFetch)
+      return
+    }
+
+    console.log('Contenedores encontrados:', todosContenedores.length)
+
+    // Actualizar cada contenedor con los nuevos precios
+    for (const contenedor of todosContenedores) {
+      let huboChangios = false
+      const itemsActualizados = contenedor.items.map((item: ItemStock) => {
+        const itemConPrecio = itemsConPrecio.find(
+          ip => ip.detalle === item.detalle.toLowerCase()
+        )
+        
+        if (itemConPrecio) {
+          huboChangios = true
+          console.log(`Actualizando ${item.detalle} en contenedor ${contenedor.nombre}:`, itemConPrecio)
+          return { ...item, costo: itemConPrecio.costo, moneda: itemConPrecio.moneda }
+        }
+        return item
+      })
+
+      // Solo actualizar si hubo cambios
+      if (huboChangios) {
+        console.log(`Guardando cambios en contenedor ${contenedor.nombre}`)
+        const { error } = await supabase
+          .from('contenedores')
+          .update({ items: itemsActualizados })
+          .eq('id', contenedor.id)
+        
+        if (error) {
+          console.error('Error al actualizar contenedor:', error)
+        }
+      }
+    }
+    console.log('Sincronización completada')
   }
 
   const handleEliminarContenedor = async (id: string) => {
@@ -300,6 +425,7 @@ function ModalContenedor({
     items: contenedor?.items || []
   })
   const [itemsUnicos, setItemsUnicos] = useState<string[]>([])
+  const [itemsPreciosMap, setItemsPreciosMap] = useState<Map<string, { costo?: number, moneda?: MonedaStock }>>(new Map())
   const [sugerenciasActivas, setSugerenciasActivas] = useState<{ [key: number]: boolean }>({})
   
   const supabase = createClient()
@@ -316,13 +442,24 @@ function ModalContenedor({
         .eq('user_id', user.id)
 
       if (!error && data) {
-        // Extraer todos los detalles únicos de items
+        // Extraer todos los items con sus precios
         const todosLosItems = data.flatMap(cont => 
-          Array.isArray(cont.items) ? cont.items.map((item: ItemStock) => item.detalle) : []
+          Array.isArray(cont.items) ? cont.items : []
         )
-        // Eliminar duplicados y ordenar
-        const unicos = Array.from(new Set(todosLosItems)).sort()
-        setItemsUnicos(unicos)
+        
+        // Crear mapa de precios (usar el primer item con precio encontrado para cada detalle)
+        const preciosMap = new Map<string, { costo?: number, moneda?: MonedaStock }>()
+        todosLosItems.forEach((item: ItemStock) => {
+          const key = item.detalle.toLowerCase()
+          if (!preciosMap.has(key) && item.costo !== undefined && item.costo > 0) {
+            preciosMap.set(key, { costo: item.costo, moneda: item.moneda })
+          }
+        })
+        setItemsPreciosMap(preciosMap)
+        
+        // Extraer detalles únicos y ordenar
+        const detallesUnicos = Array.from(new Set(todosLosItems.map((item: ItemStock) => item.detalle))).sort()
+        setItemsUnicos(detallesUnicos)
       }
     }
 
@@ -356,6 +493,14 @@ function ModalContenedor({
   const seleccionarSugerencia = (index: number, sugerencia: string) => {
     const nuevosItems = [...formData.items]
     nuevosItems[index].detalle = sugerencia
+    
+    // Autocompletar precio y moneda si existe en el map
+    const precioInfo = itemsPreciosMap.get(sugerencia.toLowerCase())
+    if (precioInfo?.costo && precioInfo.costo > 0) {
+      nuevosItems[index].costo = precioInfo.costo
+      nuevosItems[index].moneda = precioInfo.moneda || 'ARS'
+    }
+    
     setFormData({ ...formData, items: nuevosItems })
     setSugerenciasActivas({ ...sugerenciasActivas, [index]: false })
   }
