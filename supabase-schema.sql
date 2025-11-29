@@ -96,11 +96,38 @@ CREATE TABLE IF NOT EXISTS presupuestos (
   UNIQUE(user_id, numero_presupuesto)
 );
 
+-- Crear tabla de pedidos
+CREATE TABLE IF NOT EXISTS pedidos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  proveedor TEXT NOT NULL,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  completado BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Crear tabla de contenedores para stock
+CREATE TABLE IF NOT EXISTS contenedores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  nombre TEXT NOT NULL,
+  ubicacion TEXT NOT NULL CHECK (ubicacion IN ('adelante', 'atras')),
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Habilitar Row Level Security (RLS)
+CREATE INDEX idx_contenedores_user_id ON contenedores(user_id);
+CREATE INDEX idx_contenedores_ubicacion ON contenedores(ubicacion);
+
 ALTER TABLE configuracion_local ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tecnicos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reparaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE presupuestos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contenedores ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS para configuracion_local
 CREATE POLICY "Los usuarios pueden ver su propia configuración"
@@ -166,6 +193,40 @@ CREATE POLICY "Los usuarios pueden eliminar sus propios presupuestos"
   ON presupuestos FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Políticas RLS para pedidos
+CREATE POLICY "Los usuarios pueden ver sus propios pedidos"
+  ON pedidos FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden insertar sus propios pedidos"
+  ON pedidos FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden actualizar sus propios pedidos"
+  ON pedidos FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden eliminar sus propios pedidos"
+  ON pedidos FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Políticas RLS para contenedores
+CREATE POLICY "Los usuarios pueden ver sus propios contenedores"
+  ON contenedores FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden insertar sus propios contenedores"
+  ON contenedores FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden actualizar sus propios contenedores"
+  ON contenedores FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Los usuarios pueden eliminar sus propios contenedores"
+  ON contenedores FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -196,6 +257,16 @@ CREATE TRIGGER update_presupuestos_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_pedidos_updated_at
+  BEFORE UPDATE ON pedidos
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_contenedores_updated_at
+  BEFORE UPDATE ON contenedores
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- Índices para mejorar rendimiento
 CREATE INDEX idx_configuracion_local_user_id ON configuracion_local(user_id);
 CREATE INDEX idx_tecnicos_user_id ON tecnicos(user_id);
@@ -205,3 +276,5 @@ CREATE INDEX idx_reparaciones_numero_comprobante ON reparaciones(numero_comproba
 CREATE INDEX idx_reparaciones_tecnico_id ON reparaciones(tecnico_id);
 CREATE INDEX idx_presupuestos_user_id ON presupuestos(user_id);
 CREATE INDEX idx_presupuestos_numero_presupuesto ON presupuestos(numero_presupuesto);
+CREATE INDEX idx_pedidos_user_id ON pedidos(user_id);
+CREATE INDEX idx_pedidos_completado ON pedidos(completado);

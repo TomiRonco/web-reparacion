@@ -176,3 +176,24 @@ export interface ContenedorFormData {
   items: ItemStock[]
   ubicacion?: UbicacionStock
 }
+
+// Tipos para Pedidos
+export interface ItemPedido {
+  detalle: string
+  cantidad: number
+}
+
+export interface Pedido {
+  id: string
+  user_id: string
+  proveedor: string
+  items: ItemPedido[]
+  completado: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PedidoFormData {
+  proveedor: string
+  items: ItemPedido[]
+}

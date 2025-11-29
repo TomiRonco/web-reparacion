@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   FileText,
-  Package
+  Package,
+  ShoppingCart
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
@@ -26,6 +27,7 @@ const menuItems = [
   { name: 'Reparaciones', href: '/dashboard', icon: Wrench },
   { name: 'Presupuestos', href: '/dashboard/presupuestos', icon: FileText },
   { name: 'Stock', href: '/dashboard/stock', icon: Package },
+  { name: 'Pedidos', href: '/dashboard/pedidos', icon: ShoppingCart },
   { name: 'Técnicos', href: '/dashboard/tecnicos', icon: Users },
   { name: 'Estadísticas', href: '/dashboard/estadisticas', icon: BarChart3 },
 ]
