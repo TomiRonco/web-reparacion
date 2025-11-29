@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Receipt, DollarSign, TrendingUp, TrendingDown, CheckCircle, Clock, FileText } from 'lucide-react'
-import type { ProveedorPago, Comprobante, PagoRealizado, ComprobanteFormData, PagoFormData, ResumenProveedor, TipoComprobante, Moneda } from '@/types/database'
+import type { ProveedorPago, Comprobante, PagoRealizado, ComprobanteFormData, PagoFormData, ResumenProveedor, TipoComprobante, Moneda, ConfiguracionLocal } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
+import { generarPDFPagosProveedor } from '@/lib/pdf-pagos-proveedores'
 
 export default function PagosProveedoresPage() {
   const [proveedores, setProveedores] = useState<ProveedorPago[]>([])
@@ -18,6 +19,7 @@ export default function PagosProveedoresPage() {
   const [editingProveedor, setEditingProveedor] = useState<ProveedorPago | null>(null)
   const [editingComprobante, setEditingComprobante] = useState<Comprobante | null>(null)
   const [nombreProveedor, setNombreProveedor] = useState('')
+  const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   
   const supabase = createClient()
 
@@ -71,10 +73,26 @@ export default function PagosProveedoresPage() {
     }
   }
 
+  const fetchConfig = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('configuracion_local')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (data) {
+      setConfig(data)
+    }
+  }
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
       await fetchProveedores()
+      await fetchConfig()
       setLoading(false)
     }
     loadData()
@@ -325,6 +343,18 @@ export default function PagosProveedoresPage() {
                   >
                     <DollarSign className="w-4 h-4" />
                     <span>Registrar Pago</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const prov = proveedores.find(p => p.id === proveedorActivo)
+                      if (prov && resumen) {
+                        await generarPDFPagosProveedor(prov, comprobantes, pagos, resumen, config)
+                      }
+                    }}
+                    className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Exportar PDF</span>
                   </button>
                   <button
                     onClick={() => {
