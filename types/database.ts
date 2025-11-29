@@ -197,3 +197,70 @@ export interface PedidoFormData {
   proveedor: string
   items: ItemPedido[]
 }
+
+// Tipos para Pagos a Proveedores
+export type TipoComprobante = 'factura' | 'remito' | 'presupuesto' | 'nota_credito'
+export type Moneda = 'ARS' | 'USD'
+
+export interface ProveedorPago {
+  id: string
+  user_id: string
+  nombre: string
+  orden: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Comprobante {
+  id: string
+  user_id: string
+  proveedor_id: string
+  tipo: TipoComprobante
+  numero: string
+  fecha: string
+  monto: number
+  moneda: Moneda
+  pagado: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PagoRealizado {
+  id: string
+  user_id: string
+  proveedor_id: string
+  comprobante_ids: string[]
+  fecha_pago: string
+  monto_pagado: number
+  moneda: Moneda
+  notas: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ComprobanteFormData {
+  proveedor_id: string
+  tipo: TipoComprobante
+  numero: string
+  fecha: string
+  monto: number
+  moneda: Moneda
+}
+
+export interface PagoFormData {
+  proveedor_id: string
+  comprobante_ids: string[]
+  fecha_pago: string
+  monto_pagado: number
+  moneda: Moneda
+  notas?: string
+}
+
+export interface ResumenProveedor {
+  total_gastado_ars: number
+  total_gastado_usd: number
+  total_pagado_ars: number
+  total_pagado_usd: number
+  deuda_ars: number
+  deuda_usd: number
+}

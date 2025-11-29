@@ -12,7 +12,8 @@ import {
   X,
   FileText,
   Package,
-  ShoppingCart
+  ShoppingCart,
+  Receipt
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
@@ -28,6 +29,7 @@ const menuItems = [
   { name: 'Presupuestos', href: '/dashboard/presupuestos', icon: FileText },
   { name: 'Stock', href: '/dashboard/stock', icon: Package },
   { name: 'Pedidos', href: '/dashboard/pedidos', icon: ShoppingCart },
+  { name: 'Pagos a Proveedores', href: '/dashboard/pagos-proveedores', icon: Receipt },
   { name: 'Técnicos', href: '/dashboard/tecnicos', icon: Users },
   { name: 'Estadísticas', href: '/dashboard/estadisticas', icon: BarChart3 },
 ]
