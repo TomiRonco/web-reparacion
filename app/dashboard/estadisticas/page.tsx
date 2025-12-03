@@ -281,6 +281,7 @@ export default function EstadisticasPage() {
       .eq('user_id', user.id)
       .not('tecnico_id', 'is', null)
       .not('mano_obra', 'is', null)
+      .gt('mano_obra', 0)
       .gte('fecha_ingreso', inicio)
       .lte('fecha_ingreso', fin + 'T23:59:59')
       .order('fecha_ingreso', { ascending: false })
@@ -299,7 +300,7 @@ export default function EstadisticasPage() {
     const gananciasPorTecnico = new Map<string, GananciaTecnico>()
 
     reparaciones.forEach((rep: any) => {
-      if (!rep.tecnico_id || !rep.tecnicos || rep.mano_obra === null) return
+      if (!rep.tecnico_id || !rep.tecnicos || !rep.mano_obra || rep.mano_obra <= 0) return
 
       const tecnicoId = rep.tecnico_id
       
@@ -316,14 +317,12 @@ export default function EstadisticasPage() {
         id: rep.id,
         numero_comprobante: rep.numero_comprobante,
         diagnostico: rep.diagnostico,
-        mano_obra: rep.mano_obra || 0,
+        mano_obra: rep.mano_obra,
         estado: rep.estado,
         fecha_ingreso: rep.fecha_ingreso
       })
-      // Solo sumar al total si está entregada (pagada)
-      if (rep.estado === 'entregada') {
-        ganancia.total_ganancia += rep.mano_obra || 0
-      }
+      // Sumar todas las mano de obra
+      ganancia.total_ganancia += rep.mano_obra
     })
 
     // Convertir a array y ordenar por ganancia descendente
@@ -1280,11 +1279,11 @@ function TabTecnicos({
                       {ganancia.tecnico.nombre} {ganancia.tecnico.apellido}
                     </h3>
                     <p className="text-sm text-slate-600 mt-1">
-                      {ganancia.reparaciones.length} reparaciones • {ganancia.reparaciones.filter(r => r.estado === 'entregada').length} pagadas • ${ganancia.total_ganancia.toLocaleString()} en ganancias pagadas
+                      {ganancia.reparaciones.length} reparaciones • {ganancia.reparaciones.filter(r => r.estado === 'entregada').length} pagadas
                     </p>
                   </div>
                   <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
-                    <p className="text-sm font-medium">Total a Pagar (Pagadas)</p>
+                    <p className="text-sm font-medium">Total Mano de Obra</p>
                     <p className="text-2xl font-bold">${ganancia.total_ganancia.toLocaleString()}</p>
                   </div>
                 </div>
