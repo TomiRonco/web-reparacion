@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Check, Package, X, Download, StickyNote } from 'lucide-react'
-import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData } from '@/types/database'
+import { Plus, Edit2, Check, Package, X, Download, StickyNote, Trash2 } from 'lucide-react'
+import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData, RepuestoItem } from '@/types/database'
 import { generarPDFComprobante, generarPDFBlob } from '@/lib/pdf-generator'
 import { abrirWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
 import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroReparaciones'
@@ -156,11 +156,18 @@ export default function ReparacionesPage() {
   const handleAgregarDiagnostico = async (formData: DiagnosticoFormData) => {
     if (!selectedReparacion) return
 
+    // Calcular el monto total
+    const sumaRepuestos = formData.repuestos.reduce((sum, r) => sum + r.precio, 0)
+    const montoTotal = formData.mano_obra + sumaRepuestos
+
     const { error } = await supabase
       .from('reparaciones')
       .update({
         diagnostico: formData.diagnostico,
-        monto: formData.monto,
+        mano_obra: formData.mano_obra,
+        repuestos: formData.repuestos,
+        monto: montoTotal,
+        tecnico_id: formData.tecnico_id,
         estado: 'en_proceso',
         fecha_actualizado: new Date().toISOString()
       })
@@ -177,7 +184,7 @@ export default function ReparacionesPage() {
       const mensaje = plantillasWhatsApp.modificacion(
         selectedReparacion.numero_comprobante.toString().padStart(6, '0'),
         formData.diagnostico,
-        formData.monto,
+        montoTotal,
         config.nombre_local
       )
       
@@ -718,6 +725,7 @@ export default function ReparacionesPage() {
       {showDiagnosticoModal && selectedReparacion && (
         <ModalDiagnostico
           reparacion={selectedReparacion}
+          tecnicos={tecnicos}
           onClose={() => {
             setShowDiagnosticoModal(false)
             setSelectedReparacion(null)
@@ -758,8 +766,7 @@ function ModalAgregarReparacion({
     producto: '',
     marca: '',
     tiene_cargador: false,
-    observacion: '',
-    tecnico_id: ''
+    observacion: ''
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -849,25 +856,6 @@ function ModalAgregarReparacion({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Técnico Asignado*
-            </label>
-            <select
-              required
-              value={formData.tecnico_id}
-              onChange={(e) => setFormData({ ...formData, tecnico_id: e.target.value })}
-              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
-            >
-              <option value="">Seleccionar técnico...</option>
-              {tecnicos.map((tecnico) => (
-                <option key={tecnico.id} value={tecnico.id}>
-                  {tecnico.nombre} {tecnico.apellido}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               ¿Tiene cargador?*
             </label>
@@ -932,35 +920,80 @@ function ModalAgregarReparacion({
 // Modal para agregar diagnóstico
 function ModalDiagnostico({
   reparacion,
+  tecnicos,
   onClose,
   onSubmit
 }: {
   reparacion: Reparacion
+  tecnicos: Tecnico[]
   onClose: () => void
   onSubmit: (data: DiagnosticoFormData) => void
 }) {
   const [formData, setFormData] = useState<DiagnosticoFormData>({
-    diagnostico: '',
-    monto: 0
+    diagnostico: reparacion.diagnostico || '',
+    mano_obra: reparacion.mano_obra || 0,
+    repuestos: reparacion.repuestos || [],
+    tecnico_id: reparacion.tecnico_id || ''
   })
+
+  const [nuevoRepuesto, setNuevoRepuesto] = useState<RepuestoItem>({
+    detalle: '',
+    precio: 0
+  })
+
+  const agregarRepuesto = () => {
+    if (!nuevoRepuesto.detalle.trim()) {
+      alert('Ingresa un detalle para el repuesto')
+      return
+    }
+    if (nuevoRepuesto.precio <= 0) {
+      alert('El precio debe ser mayor a 0')
+      return
+    }
+    
+    setFormData({
+      ...formData,
+      repuestos: [...formData.repuestos, nuevoRepuesto]
+    })
+    
+    setNuevoRepuesto({ detalle: '', precio: 0 })
+  }
+
+  const eliminarRepuesto = (index: number) => {
+    setFormData({
+      ...formData,
+      repuestos: formData.repuestos.filter((_, i) => i !== index)
+    })
+  }
+
+  const calcularMontoTotal = () => {
+    const sumaRepuestos = formData.repuestos.reduce((sum, r) => sum + r.precio, 0)
+    return formData.mano_obra + sumaRepuestos
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.tecnico_id) {
+      alert('Debes seleccionar un técnico')
+      return
+    }
+    
     onSubmit(formData)
   }
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-xl w-full shadow-2xl">
+      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-slate-900">Agregar Diagnóstico</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Editar Reparación</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X className="w-6 h-6" />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="bg-slate-50 p-4 rounded-lg mb-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="bg-slate-50 p-4 rounded-lg">
             <p className="text-sm text-slate-600">Cliente: <span className="font-medium text-slate-900">{reparacion.cliente_nombre} {reparacion.cliente_apellido}</span></p>
             <p className="text-sm text-slate-600">Producto: <span className="font-medium text-slate-900">{reparacion.producto} - {reparacion.marca}</span></p>
           </div>
@@ -973,7 +1006,7 @@ function ModalDiagnostico({
               required
               value={formData.diagnostico}
               onChange={(e) => setFormData({ ...formData, diagnostico: e.target.value })}
-              rows={4}
+              rows={3}
               className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
               placeholder="Detalla qué necesita el producto para repararse..."
             />
@@ -981,18 +1014,118 @@ function ModalDiagnostico({
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Monto de la Reparación*
+              Técnico Asignado*
+            </label>
+            <select
+              required
+              value={formData.tecnico_id}
+              onChange={(e) => setFormData({ ...formData, tecnico_id: e.target.value })}
+              className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
+            >
+              <option value="">Seleccionar técnico...</option>
+              {tecnicos.map((tecnico) => (
+                <option key={tecnico.id} value={tecnico.id}>
+                  {tecnico.nombre} {tecnico.apellido}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Mano de Obra*
             </label>
             <input
               type="number"
               required
               min="0"
               step="0.01"
-              value={formData.monto}
-              onChange={(e) => setFormData({ ...formData, monto: parseFloat(e.target.value) })}
+              value={formData.mano_obra}
+              onChange={(e) => setFormData({ ...formData, mano_obra: parseFloat(e.target.value) || 0 })}
               className="w-full px-3 py-2 bg-white border-2 border-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 shadow-sm"
               placeholder="0.00"
             />
+          </div>
+
+          <div className="border-t pt-4">
+            <label className="block text-sm font-medium text-slate-700 mb-3">
+              Repuestos
+            </label>
+            
+            {/* Lista de repuestos agregados */}
+            {formData.repuestos.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {formData.repuestos.map((repuesto, index) => (
+                  <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">{repuesto.detalle}</p>
+                      <p className="text-sm text-slate-600">${repuesto.precio.toLocaleString()}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => eliminarRepuesto(index)}
+                      className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded"
+                      title="Eliminar repuesto"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para agregar nuevo repuesto */}
+            <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+              <p className="text-sm font-medium text-slate-700">Agregar Repuesto</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="text"
+                    value={nuevoRepuesto.detalle}
+                    onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, detalle: e.target.value })}
+                    placeholder="Detalle del repuesto"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={nuevoRepuesto.precio}
+                    onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, precio: parseFloat(e.target.value) || 0 })}
+                    placeholder="Precio"
+                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={agregarRepuesto}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition whitespace-nowrap"
+                  >
+                    + Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Monto Total */}
+          <div className="border-t pt-4">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-slate-600">Mano de Obra:</p>
+                  <p className="text-sm text-slate-600">Repuestos ({formData.repuestos.length}):</p>
+                  <p className="text-base font-bold text-slate-900 mt-2">TOTAL:</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-slate-900">${formData.mano_obra.toLocaleString()}</p>
+                  <p className="text-sm text-slate-900">${formData.repuestos.reduce((sum, r) => sum + r.precio, 0).toLocaleString()}</p>
+                  <p className="text-xl font-bold text-green-700 mt-2">${calcularMontoTotal().toLocaleString()}</p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">* El cliente solo verá el monto total</p>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

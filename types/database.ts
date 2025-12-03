@@ -27,6 +27,11 @@ export interface Tecnico {
 
 export type EstadoReparacion = 'pendiente' | 'en_proceso' | 'finalizada' | 'entregada'
 
+export interface RepuestoItem {
+  detalle: string
+  precio: number
+}
+
 export interface Reparacion {
   id: string
   user_id: string
@@ -50,7 +55,9 @@ export interface Reparacion {
   
   // Diagnóstico y costo
   diagnostico: string | null
-  monto: number | null
+  mano_obra: number | null
+  repuestos: RepuestoItem[]
+  monto: number | null  // Total calculado: mano_obra + suma(repuestos)
   
   // Fechas
   fecha_ingreso: string
@@ -73,7 +80,7 @@ export interface ReparacionFormData {
   marca: string
   tiene_cargador: boolean
   observacion: string
-  tecnico_id: string
+  tecnico_id?: string  // Ahora es opcional al crear, se selecciona al editar
 }
 
 export interface TecnicoFormData {
@@ -84,7 +91,9 @@ export interface TecnicoFormData {
 
 export interface DiagnosticoFormData {
   diagnostico: string
-  monto: number
+  mano_obra: number
+  repuestos: RepuestoItem[]
+  tecnico_id: string
 }
 
 export interface Estadisticas {
