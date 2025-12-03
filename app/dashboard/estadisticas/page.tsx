@@ -15,12 +15,16 @@ import {
   AlertTriangle,
   Archive,
   BarChart3,
-  Settings
+  Settings,
+  Download,
+  Calendar,
+  Users
 } from 'lucide-react'
-import type { Tecnico } from '@/types/database'
+import type { Tecnico, Reparacion } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
+import { descargarPDFEstadisticasTecnicos } from '@/lib/pdf-estadisticas-tecnicos'
 
-type TabType = 'reparaciones' | 'stock'
+type TabType = 'reparaciones' | 'stock' | 'tecnicos'
 
 interface ItemStock {
   detalle: string
@@ -71,10 +75,38 @@ interface EstadisticasData {
   }[]
 }
 
+interface ReparacionTecnico {
+  id: string
+  numero_comprobante: number
+  diagnostico: string | null
+  mano_obra: number
+  fecha_finalizado: string
+}
+
+interface GananciaTecnico {
+  tecnico: Tecnico
+  reparaciones: ReparacionTecnico[]
+  total_ganancia: number
+}
+
 export default function EstadisticasPage() {
   const [tabActiva, setTabActiva] = useState<TabType>('reparaciones')
   const [estadisticas, setEstadisticas] = useState<EstadisticasData | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Estados para ganancias de técnicos
+  const [ganancias, setGanancias] = useState<GananciaTecnico[]>([])
+  const [tipoFiltro, setTipoFiltro] = useState<'mes' | 'rango'>('mes')
+  const [mesSeleccionado, setMesSeleccionado] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+  })
+  const [fechaFin, setFechaFin] = useState(() => new Date().toISOString().split('T')[0])
+  const [nombreLocal, setNombreLocal] = useState<string>('')
   
   // Estados para stock
   const [contenedores, setContenedores] = useState<Contenedor[]>([])
@@ -97,12 +129,15 @@ export default function EstadisticasPage() {
 
     const { data: configData } = await supabase
       .from('configuracion_local')
-      .select('precio_dolar')
+      .select('precio_dolar, nombre_local')
       .eq('user_id', user.id)
       .single()
 
     if (configData?.precio_dolar) {
       setPrecioDolar(configData.precio_dolar)
+    }
+    if (configData?.nombre_local) {
+      setNombreLocal(configData.nombre_local)
     }
   }
 
@@ -206,7 +241,83 @@ export default function EstadisticasPage() {
     setAlertasStock(alertas)
   }
 
-  const fetchEstadisticas = async () => {
+  const fetchGananciasTecnicos = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // Calcular fechas según el tipo de filtro
+    let inicio: string, fin: string
+
+    if (tipoFiltro === 'mes') {
+      const [year, month] = mesSeleccionado.split('-').map(Number)
+      const firstDay = new Date(year, month - 1, 1)
+      const lastDay = new Date(year, month, 0)
+      inicio = firstDay.toISOString().split('T')[0]
+      fin = lastDay.toISOString().split('T')[0]
+    } else {
+      inicio = fechaInicio
+      fin = fechaFin
+    }
+
+    // Obtener reparaciones finalizadas en el período con mano_obra > 0
+    const { data: reparaciones } = await supabase
+      .from('reparaciones')
+      .select(`
+        id,
+        numero_comprobante,
+        diagnostico,
+        mano_obra,
+        fecha_finalizado,
+        tecnico_id,
+        tecnicos(*)
+      `)
+      .eq('user_id', user.id)
+      .eq('estado', 'finalizada')
+      .not('mano_obra', 'is', null)
+      .gte('fecha_finalizado', inicio)
+      .lte('fecha_finalizado', fin + 'T23:59:59')
+      .order('fecha_finalizado', { ascending: false })
+
+    if (!reparaciones) {
+      setGanancias([])
+      return
+    }
+
+    // Agrupar por técnico
+    const gananciasPorTecnico = new Map<string, GananciaTecnico>()
+
+    reparaciones.forEach((rep: any) => {
+      if (!rep.tecnico_id || !rep.tecnicos || rep.mano_obra === null) return
+
+      const tecnicoId = rep.tecnico_id
+      
+      if (!gananciasPorTecnico.has(tecnicoId)) {
+        gananciasPorTecnico.set(tecnicoId, {
+          tecnico: rep.tecnicos as Tecnico,
+          reparaciones: [],
+          total_ganancia: 0
+        })
+      }
+
+      const ganancia = gananciasPorTecnico.get(tecnicoId)!
+      ganancia.reparaciones.push({
+        id: rep.id,
+        numero_comprobante: rep.numero_comprobante,
+        diagnostico: rep.diagnostico,
+        mano_obra: rep.mano_obra || 0,
+        fecha_finalizado: rep.fecha_finalizado
+      })
+      ganancia.total_ganancia += rep.mano_obra || 0
+    })
+
+    // Convertir a array y ordenar por ganancia descendente
+    const resultado = Array.from(gananciasPorTecnico.values())
+      .sort((a, b) => b.total_ganancia - a.total_ganancia)
+
+    setGanancias(resultado)
+  }
+
+  const fetchEstadisticas = async () {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -295,6 +406,13 @@ export default function EstadisticasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configuracion.umbral_bajo])
 
+  useEffect(() => {
+    if (tabActiva === 'tecnicos') {
+      fetchGananciasTecnicos()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabActiva, tipoFiltro, mesSeleccionado, fechaInicio, fechaFin])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -335,6 +453,19 @@ export default function EstadisticasPage() {
             </div>
           </button>
           <button
+            onClick={() => setTabActiva('tecnicos')}
+            className={`px-6 py-3 font-medium text-sm transition-all relative ${
+              tabActiva === 'tecnicos'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Ganancias Técnicos</span>
+            </div>
+          </button>
+          <button
             onClick={() => setTabActiva('stock')}
             className={`px-6 py-3 font-medium text-sm transition-all relative ${
               tabActiva === 'stock'
@@ -358,6 +489,19 @@ export default function EstadisticasPage() {
       {/* Contenido según tab activa */}
       {tabActiva === 'reparaciones' ? (
         <TabReparaciones estadisticas={estadisticas} />
+      ) : tabActiva === 'tecnicos' ? (
+        <TabTecnicos
+          ganancias={ganancias}
+          tipoFiltro={tipoFiltro}
+          setTipoFiltro={setTipoFiltro}
+          mesSeleccionado={mesSeleccionado}
+          setMesSeleccionado={setMesSeleccionado}
+          fechaInicio={fechaInicio}
+          setFechaInicio={setFechaInicio}
+          fechaFin={fechaFin}
+          setFechaFin={setFechaFin}
+          nombreLocal={nombreLocal}
+        />
       ) : (
         <TabStock 
           alertasStock={alertasStock}
@@ -917,6 +1061,247 @@ function TabStock({
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// Componente Tab de Técnicos
+function TabTecnicos({
+  ganancias,
+  tipoFiltro,
+  setTipoFiltro,
+  mesSeleccionado,
+  setMesSeleccionado,
+  fechaInicio,
+  setFechaInicio,
+  fechaFin,
+  setFechaFin,
+  nombreLocal
+}: {
+  ganancias: GananciaTecnico[]
+  tipoFiltro: 'mes' | 'rango'
+  setTipoFiltro: (tipo: 'mes' | 'rango') => void
+  mesSeleccionado: string
+  setMesSeleccionado: (mes: string) => void
+  fechaInicio: string
+  setFechaInicio: (fecha: string) => void
+  fechaFin: string
+  setFechaFin: (fecha: string) => void
+  nombreLocal: string
+}) {
+  const totalGeneral = ganancias.reduce((sum, g) => sum + g.total_ganancia, 0)
+  const totalReparaciones = ganancias.reduce((sum, g) => sum + g.reparaciones.length, 0)
+
+  const handleExportarPDF = async () => {
+    let inicio: string, fin: string
+
+    if (tipoFiltro === 'mes') {
+      const [year, month] = mesSeleccionado.split('-').map(Number)
+      const firstDay = new Date(year, month - 1, 1)
+      const lastDay = new Date(year, month, 0)
+      inicio = firstDay.toISOString().split('T')[0]
+      fin = lastDay.toISOString().split('T')[0]
+    } else {
+      inicio = fechaInicio
+      fin = fechaFin
+    }
+
+    await descargarPDFEstadisticasTecnicos(ganancias, inicio, fin, nombreLocal)
+  }
+
+  return (
+    <>
+      {/* Filtros */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          {/* Tipo de filtro */}
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setTipoFiltro('mes')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                tipoFiltro === 'mes'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Por Mes
+            </button>
+            <button
+              onClick={() => setTipoFiltro('rango')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                tipoFiltro === 'rango'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Rango de Fechas
+            </button>
+          </div>
+
+          {/* Selector de fecha según tipo */}
+          {tipoFiltro === 'mes' ? (
+            <div className="flex items-center space-x-3">
+              <label className="text-sm font-medium text-slate-700">Mes:</label>
+              <input
+                type="month"
+                value={mesSeleccionado}
+                onChange={(e) => setMesSeleccionado(e.target.value)}
+                className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <label className="text-sm font-medium text-slate-700">Desde:</label>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+              <label className="text-sm font-medium text-slate-700">Hasta:</label>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+          )}
+
+          {/* Botón exportar PDF */}
+          {ganancias.length > 0 && (
+            <button
+              onClick={handleExportarPDF}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+            >
+              <Download className="w-4 h-4" />
+              <span>Exportar PDF</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Resumen */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Total Ganancia</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">
+                ${totalGeneral.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <DollarSign className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Total Reparaciones</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">
+                {totalReparaciones}
+              </p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Wrench className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Técnicos Activos</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">
+                {ganancias.length}
+              </p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <Users className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla de ganancias por técnico */}
+      {ganancias.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 text-lg">No hay reparaciones finalizadas en este período</p>
+          <p className="text-slate-400 text-sm mt-2">
+            Cambia el filtro de fecha para ver más resultados
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {ganancias.map((ganancia) => (
+            <div key={ganancia.tecnico.id} className="bg-white rounded-lg shadow overflow-hidden">
+              {/* Header del técnico */}
+              <div className="bg-green-50 border-b-2 border-green-200 p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {ganancia.tecnico.nombre} {ganancia.tecnico.apellido}
+                    </h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {ganancia.reparaciones.length} reparaciones • ${ganancia.total_ganancia.toLocaleString()} en ganancias
+                    </p>
+                  </div>
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
+                    <p className="text-sm font-medium">Total Ganancia</p>
+                    <p className="text-2xl font-bold">${ganancia.total_ganancia.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabla de reparaciones */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 text-sm">
+                        N° Comprobante
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 text-sm">
+                        Detalle
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700 text-sm">
+                        Mano de Obra
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-700 text-sm">
+                        Fecha
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ganancia.reparaciones.map((rep) => (
+                      <tr key={rep.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td className="py-3 px-4 font-medium text-slate-900">
+                          #{rep.numero_comprobante.toString().padStart(6, '0')}
+                        </td>
+                        <td className="py-3 px-4 text-slate-700">
+                          {rep.diagnostico || 'Sin diagnóstico'}
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-green-600">
+                          ${rep.mano_obra.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4 text-center text-slate-600 text-sm">
+                          {new Date(rep.fecha_finalizado).toLocaleDateString('es-AR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </>
