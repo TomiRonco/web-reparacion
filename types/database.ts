@@ -46,6 +46,7 @@ export interface Reparacion {
   producto: string
   marca: string
   tiene_cargador: boolean
+  contrasena: string | null
   observacion: string | null
   notas: string | null
   
@@ -79,6 +80,7 @@ export interface ReparacionFormData {
   producto: string
   marca: string
   tiene_cargador: boolean
+  contrasena: string
   observacion: string
   tecnico_id?: string  // Ahora es opcional al crear, se selecciona al editar
 }

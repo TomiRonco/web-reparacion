@@ -4,7 +4,8 @@
 -- 1. Agregar columnas para mano de obra y repuestos
 ALTER TABLE reparaciones
 ADD COLUMN IF NOT EXISTS mano_obra DECIMAL(10,2) DEFAULT 0,
-ADD COLUMN IF NOT EXISTS repuestos JSONB DEFAULT '[]'::jsonb;
+ADD COLUMN IF NOT EXISTS repuestos JSONB DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS contrasena TEXT;
 
 -- 2. Migrar datos existentes: pasar monto actual a mano_obra
 -- (solo para reparaciones que ya tienen monto)
@@ -15,6 +16,7 @@ WHERE monto IS NOT NULL AND mano_obra = 0;
 -- 3. Comentarios sobre las columnas
 COMMENT ON COLUMN reparaciones.mano_obra IS 'Costo de la mano de obra de la reparación';
 COMMENT ON COLUMN reparaciones.repuestos IS 'Array de repuestos con estructura: [{detalle: string, precio: number}]';
+COMMENT ON COLUMN reparaciones.contrasena IS 'Contraseña de la notebook/PC (opcional)';
 COMMENT ON COLUMN reparaciones.monto IS 'Monto total calculado: mano_obra + suma(repuestos.precio)';
 
 -- Nota: El campo tecnico_id ya existe en la tabla, solo se moverá su selección
