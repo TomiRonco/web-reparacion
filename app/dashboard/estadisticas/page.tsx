@@ -317,7 +317,7 @@ export default function EstadisticasPage() {
     setGanancias(resultado)
   }
 
-  const fetchEstadisticas = async () {
+  const fetchEstadisticas = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
