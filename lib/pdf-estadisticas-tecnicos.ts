@@ -7,7 +7,7 @@ interface ReparacionTecnico {
   diagnostico: string
   mano_obra: number
   estado: string
-  fecha_creacion: string
+  fecha_ingreso: string
 }
 
 interface GananciaTecnico {
@@ -84,7 +84,7 @@ export async function generarPDFEstadisticasTecnicos(
       rep.diagnostico || 'Sin diagnóstico',
       `$${rep.mano_obra.toLocaleString()}`,
       rep.estado === 'entregada' ? 'Pagada' : 'No Pagada',
-      formatearFecha(rep.fecha_creacion)
+      formatearFecha(rep.fecha_ingreso)
     ])
     
     autoTable(doc, {

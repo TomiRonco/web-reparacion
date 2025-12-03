@@ -81,7 +81,7 @@ interface ReparacionTecnico {
   diagnostico: string | null
   mano_obra: number
   estado: string
-  fecha_creacion: string
+  fecha_ingreso: string
 }
 
 interface GananciaTecnico {
@@ -274,16 +274,16 @@ export default function EstadisticasPage() {
         diagnostico,
         mano_obra,
         estado,
-        fecha_creacion,
+        fecha_ingreso,
         tecnico_id,
         tecnicos(*)
       `)
       .eq('user_id', user.id)
       .not('tecnico_id', 'is', null)
       .not('mano_obra', 'is', null)
-      .gte('fecha_creacion', inicio)
-      .lte('fecha_creacion', fin + 'T23:59:59')
-      .order('fecha_creacion', { ascending: false })
+      .gte('fecha_ingreso', inicio)
+      .lte('fecha_ingreso', fin + 'T23:59:59')
+      .order('fecha_ingreso', { ascending: false })
 
     console.log('Filtros:', { inicio, fin, tipoFiltro, mesSeleccionado })
     console.log('Reparaciones encontradas:', reparaciones?.length || 0, reparaciones)
@@ -318,7 +318,7 @@ export default function EstadisticasPage() {
         diagnostico: rep.diagnostico,
         mano_obra: rep.mano_obra || 0,
         estado: rep.estado,
-        fecha_creacion: rep.fecha_creacion
+        fecha_ingreso: rep.fecha_ingreso
       })
       // Solo sumar al total si está entregada (pagada)
       if (rep.estado === 'entregada') {
@@ -1338,7 +1338,7 @@ function TabTecnicos({
                           )}
                         </td>
                         <td className="py-3 px-4 text-center text-slate-600 text-sm">
-                          {new Date(rep.fecha_creacion).toLocaleDateString('es-AR')}
+                          {new Date(rep.fecha_ingreso).toLocaleDateString('es-AR')}
                         </td>
                       </tr>
                     ))}
