@@ -96,6 +96,7 @@ export default function EstadisticasPage() {
   
   // Estados para ganancias de técnicos
   const [ganancias, setGanancias] = useState<GananciaTecnico[]>([])
+  const [loadingGanancias, setLoadingGanancias] = useState(false)
   const [tipoFiltro, setTipoFiltro] = useState<'mes' | 'rango'>('mes')
   const [mesSeleccionado, setMesSeleccionado] = useState(() => {
     const now = new Date()
@@ -242,8 +243,12 @@ export default function EstadisticasPage() {
   }
 
   const fetchGananciasTecnicos = async () => {
+    setLoadingGanancias(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setLoadingGanancias(false)
+      return
+    }
 
     // Calcular fechas según el tipo de filtro
     let inicio: string, fin: string
@@ -315,6 +320,7 @@ export default function EstadisticasPage() {
       .sort((a, b) => b.total_ganancia - a.total_ganancia)
 
     setGanancias(resultado)
+    setLoadingGanancias(false)
   }
 
   const fetchEstadisticas = async () => {
@@ -492,6 +498,7 @@ export default function EstadisticasPage() {
       ) : tabActiva === 'tecnicos' ? (
         <TabTecnicos
           ganancias={ganancias}
+          loadingGanancias={loadingGanancias}
           tipoFiltro={tipoFiltro}
           setTipoFiltro={setTipoFiltro}
           mesSeleccionado={mesSeleccionado}
@@ -1070,6 +1077,7 @@ function TabStock({
 // Componente Tab de Técnicos
 function TabTecnicos({
   ganancias,
+  loadingGanancias,
   tipoFiltro,
   setTipoFiltro,
   mesSeleccionado,
@@ -1081,6 +1089,7 @@ function TabTecnicos({
   nombreLocal
 }: {
   ganancias: GananciaTecnico[]
+  loadingGanancias: boolean
   tipoFiltro: 'mes' | 'rango'
   setTipoFiltro: (tipo: 'mes' | 'rango') => void
   mesSeleccionado: string
@@ -1185,7 +1194,15 @@ function TabTecnicos({
         </div>
       </div>
 
+      {/* Indicador de carga */}
+      {loadingGanancias && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      )}
+
       {/* Resumen */}
+      {!loadingGanancias && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -1231,7 +1248,7 @@ function TabTecnicos({
       </div>
 
       {/* Tabla de ganancias por técnico */}
-      {ganancias.length === 0 ? (
+      {!loadingGanancias && ganancias.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 text-lg">No hay reparaciones finalizadas en este período</p>
@@ -1239,7 +1256,7 @@ function TabTecnicos({
             Cambia el filtro de fecha para ver más resultados
           </p>
         </div>
-      ) : (
+      ) : !loadingGanancias && (
         <div className="space-y-6">
           {ganancias.map((ganancia) => (
             <div key={ganancia.tecnico.id} className="bg-white rounded-lg shadow overflow-hidden">
