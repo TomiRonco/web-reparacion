@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import type { Tecnico } from '@/types/database'
 
 interface ReparacionTecnico {
@@ -85,7 +85,7 @@ export async function generarPDFEstadisticasTecnicos(
       formatearFecha(rep.fecha_finalizado)
     ])
     
-    ;(doc as any).autoTable({
+    autoTable(doc, {
       startY: startY,
       head: [['N° Comprobante', 'Detalle', 'Mano de Obra', 'Fecha']],
       body: tableData,
