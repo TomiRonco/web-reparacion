@@ -6,7 +6,8 @@ interface ReparacionTecnico {
   numero_comprobante: number
   diagnostico: string
   mano_obra: number
-  fecha_finalizado: string
+  estado: string
+  fecha_creacion: string
 }
 
 interface GananciaTecnico {
@@ -82,12 +83,13 @@ export async function generarPDFEstadisticasTecnicos(
       `#${rep.numero_comprobante.toString().padStart(6, '0')}`,
       rep.diagnostico || 'Sin diagnóstico',
       `$${rep.mano_obra.toLocaleString()}`,
-      formatearFecha(rep.fecha_finalizado)
+      rep.estado === 'entregada' ? 'Pagada' : 'No Pagada',
+      formatearFecha(rep.fecha_creacion)
     ])
     
     autoTable(doc, {
       startY: startY,
-      head: [['N° Comprobante', 'Detalle', 'Mano de Obra', 'Fecha']],
+      head: [['N° Comprobante', 'Detalle', 'Mano de Obra', 'Estado', 'Fecha']],
       body: tableData,
       theme: 'grid',
       styles: {

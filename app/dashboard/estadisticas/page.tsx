@@ -80,7 +80,8 @@ interface ReparacionTecnico {
   numero_comprobante: number
   diagnostico: string | null
   mano_obra: number
-  fecha_finalizado: string
+  estado: string
+  fecha_creacion: string
 }
 
 interface GananciaTecnico {
@@ -264,27 +265,33 @@ export default function EstadisticasPage() {
       fin = fechaFin
     }
 
-    // Obtener reparaciones finalizadas en el período con mano_obra > 0
-    const { data: reparaciones } = await supabase
+    // Obtener todas las reparaciones con técnico y mano de obra asignada en el período
+    const { data: reparaciones, error } = await supabase
       .from('reparaciones')
       .select(`
         id,
         numero_comprobante,
         diagnostico,
         mano_obra,
-        fecha_finalizado,
+        estado,
+        fecha_creacion,
         tecnico_id,
         tecnicos(*)
       `)
       .eq('user_id', user.id)
-      .eq('estado', 'finalizada')
+      .not('tecnico_id', 'is', null)
       .not('mano_obra', 'is', null)
-      .gte('fecha_finalizado', inicio)
-      .lte('fecha_finalizado', fin + 'T23:59:59')
-      .order('fecha_finalizado', { ascending: false })
+      .gte('fecha_creacion', inicio)
+      .lte('fecha_creacion', fin + 'T23:59:59')
+      .order('fecha_creacion', { ascending: false })
 
-    if (!reparaciones) {
+    console.log('Filtros:', { inicio, fin, tipoFiltro, mesSeleccionado })
+    console.log('Reparaciones encontradas:', reparaciones?.length || 0, reparaciones)
+    if (error) console.error('Error:', error)
+
+    if (!reparaciones || reparaciones.length === 0) {
       setGanancias([])
+      setLoadingGanancias(false)
       return
     }
 
@@ -310,9 +317,13 @@ export default function EstadisticasPage() {
         numero_comprobante: rep.numero_comprobante,
         diagnostico: rep.diagnostico,
         mano_obra: rep.mano_obra || 0,
-        fecha_finalizado: rep.fecha_finalizado
+        estado: rep.estado,
+        fecha_creacion: rep.fecha_creacion
       })
-      ganancia.total_ganancia += rep.mano_obra || 0
+      // Solo sumar al total si está entregada (pagada)
+      if (rep.estado === 'entregada') {
+        ganancia.total_ganancia += rep.mano_obra || 0
+      }
     })
 
     // Convertir a array y ordenar por ganancia descendente
@@ -1246,6 +1257,7 @@ function TabTecnicos({
           </div>
         </div>
       </div>
+      )}
 
       {/* Tabla de ganancias por técnico */}
       {!loadingGanancias && ganancias.length === 0 ? (
@@ -1268,11 +1280,11 @@ function TabTecnicos({
                       {ganancia.tecnico.nombre} {ganancia.tecnico.apellido}
                     </h3>
                     <p className="text-sm text-slate-600 mt-1">
-                      {ganancia.reparaciones.length} reparaciones • ${ganancia.total_ganancia.toLocaleString()} en ganancias
+                      {ganancia.reparaciones.length} reparaciones • {ganancia.reparaciones.filter(r => r.estado === 'entregada').length} pagadas • ${ganancia.total_ganancia.toLocaleString()} en ganancias pagadas
                     </p>
                   </div>
                   <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
-                    <p className="text-sm font-medium">Total Ganancia</p>
+                    <p className="text-sm font-medium">Total a Pagar (Pagadas)</p>
                     <p className="text-2xl font-bold">${ganancia.total_ganancia.toLocaleString()}</p>
                   </div>
                 </div>
@@ -1293,6 +1305,9 @@ function TabTecnicos({
                         Mano de Obra
                       </th>
                       <th className="text-center py-3 px-4 font-semibold text-slate-700 text-sm">
+                        Estado Pago
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-700 text-sm">
                         Fecha
                       </th>
                     </tr>
@@ -1309,8 +1324,21 @@ function TabTecnicos({
                         <td className="py-3 px-4 text-right font-bold text-green-600">
                           ${rep.mano_obra.toLocaleString()}
                         </td>
+                        <td className="py-3 px-4 text-center">
+                          {rep.estado === 'entregada' ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Pagada
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              No Pagada
+                            </span>
+                          )}
+                        </td>
                         <td className="py-3 px-4 text-center text-slate-600 text-sm">
-                          {new Date(rep.fecha_finalizado).toLocaleDateString('es-AR')}
+                          {new Date(rep.fecha_creacion).toLocaleDateString('es-AR')}
                         </td>
                       </tr>
                     ))}
