@@ -265,7 +265,7 @@ export default function EstadisticasPage() {
       fin = fechaFin
     }
 
-    // Obtener todas las reparaciones con técnico y mano de obra asignada en el período
+    // Obtener todas las reparaciones con técnico en el período
     const { data: reparaciones, error } = await supabase
       .from('reparaciones')
       .select(`
@@ -280,8 +280,6 @@ export default function EstadisticasPage() {
       `)
       .eq('user_id', user.id)
       .not('tecnico_id', 'is', null)
-      .not('mano_obra', 'is', null)
-      .gt('mano_obra', 0)
       .gte('fecha_ingreso', inicio)
       .lte('fecha_ingreso', fin + 'T23:59:59')
       .order('fecha_ingreso', { ascending: false })
@@ -300,7 +298,7 @@ export default function EstadisticasPage() {
     const gananciasPorTecnico = new Map<string, GananciaTecnico>()
 
     reparaciones.forEach((rep: any) => {
-      if (!rep.tecnico_id || !rep.tecnicos || !rep.mano_obra || rep.mano_obra <= 0) return
+      if (!rep.tecnico_id || !rep.tecnicos) return
 
       const tecnicoId = rep.tecnico_id
       
@@ -317,12 +315,14 @@ export default function EstadisticasPage() {
         id: rep.id,
         numero_comprobante: rep.numero_comprobante,
         diagnostico: rep.diagnostico,
-        mano_obra: rep.mano_obra,
+        mano_obra: rep.mano_obra || 0,
         estado: rep.estado,
         fecha_ingreso: rep.fecha_ingreso
       })
-      // Sumar todas las mano de obra
-      ganancia.total_ganancia += rep.mano_obra
+      // Solo sumar si tiene mano de obra
+      if (rep.mano_obra && rep.mano_obra > 0) {
+        ganancia.total_ganancia += rep.mano_obra
+      }
     })
 
     // Convertir a array y ordenar por ganancia descendente
@@ -1321,7 +1321,11 @@ function TabTecnicos({
                           {rep.diagnostico || 'Sin diagnóstico'}
                         </td>
                         <td className="py-3 px-4 text-right font-bold text-green-600">
-                          ${rep.mano_obra.toLocaleString()}
+                          {rep.mano_obra && rep.mano_obra > 0 ? (
+                            `$${rep.mano_obra.toLocaleString()}`
+                          ) : (
+                            <span className="text-slate-400 text-sm">Sin asignar</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-center">
                           {rep.estado === 'entregada' ? (

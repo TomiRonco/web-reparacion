@@ -82,7 +82,7 @@ export async function generarPDFEstadisticasTecnicos(
     const tableData = ganancia.reparaciones.map(rep => [
       `#${rep.numero_comprobante.toString().padStart(6, '0')}`,
       rep.diagnostico || 'Sin diagnóstico',
-      `$${rep.mano_obra.toLocaleString()}`,
+      rep.mano_obra && rep.mano_obra > 0 ? `$${rep.mano_obra.toLocaleString()}` : 'Sin asignar',
       rep.estado === 'entregada' ? 'Pagada' : 'No Pagada',
       formatearFecha(rep.fecha_ingreso)
     ])
