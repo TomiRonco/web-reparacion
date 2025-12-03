@@ -4,7 +4,7 @@ import type { Tecnico } from '@/types/database'
 
 interface ReparacionTecnico {
   numero_comprobante: number
-  diagnostico: string
+  diagnostico: string | null
   mano_obra: number
   estado: string
   fecha_ingreso: string
