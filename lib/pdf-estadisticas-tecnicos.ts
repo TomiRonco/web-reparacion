@@ -24,59 +24,77 @@ export async function generarPDFEstadisticasTecnicos(
 ) {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
   
   // Título
-  doc.setFontSize(18)
+  doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
-  doc.text('Reporte de Ganancias por Técnico', pageWidth / 2, 20, { align: 'center' })
+  doc.text('Reporte de Ganancias por Técnico', pageWidth / 2, 22, { align: 'center' })
   
   // Nombre del local
   if (nombreLocal) {
-    doc.setFontSize(12)
+    doc.setFontSize(13)
     doc.setFont('helvetica', 'normal')
-    doc.text(nombreLocal, pageWidth / 2, 28, { align: 'center' })
+    doc.text(nombreLocal, pageWidth / 2, 32, { align: 'center' })
   }
   
   // Período
-  doc.setFontSize(10)
+  doc.setFontSize(11)
   doc.setFont('helvetica', 'normal')
   const periodoTexto = `Período: ${formatearFecha(fechaInicio)} - ${formatearFecha(fechaFin)}`
-  doc.text(periodoTexto, pageWidth / 2, 36, { align: 'center' })
+  doc.text(periodoTexto, pageWidth / 2, nombreLocal ? 40 : 38, { align: 'center' })
   
-  let startY = 45
+  let startY = nombreLocal ? 52 : 48
   
-  // Total general
+  // Total general con caja destacada
   const totalGeneral = ganancias.reduce((sum, g) => sum + g.total_ganancia, 0)
-  doc.setFontSize(12)
+  doc.setFillColor(34, 197, 94) // Verde
+  doc.roundedRect(14, startY - 8, pageWidth - 28, 12, 2, 2, 'F')
+  doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  doc.text(`Total General: $${totalGeneral.toLocaleString()}`, 14, startY)
+  doc.setTextColor(255, 255, 255)
+  doc.text(`TOTAL GENERAL: $${totalGeneral.toLocaleString()}`, pageWidth / 2, startY - 1, { align: 'center' })
+  doc.setTextColor(0, 0, 0)
   
-  startY += 10
+  startY += 12
   
   // Generar tabla para cada técnico
   ganancias.forEach((ganancia, index) => {
-    if (index > 0) {
-      startY += 8
+    // Verificar si necesitamos una nueva página antes de empezar un nuevo técnico
+    if (startY > pageHeight - 60) {
+      doc.addPage()
+      startY = 20
     }
     
-    // Información del técnico
-    doc.setFontSize(11)
+    if (index > 0) {
+      startY += 10
+    }
+    
+    // Información del técnico con fondo
+    doc.setFillColor(240, 240, 240)
+    doc.roundedRect(14, startY - 6, pageWidth - 28, 14, 1, 1, 'F')
+    
+    doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
+    doc.setTextColor(30, 30, 30)
     doc.text(
       `${ganancia.tecnico.nombre} ${ganancia.tecnico.apellido}`,
-      14,
+      18,
       startY
     )
     
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+    const reparacionesPagadas = ganancia.reparaciones.filter(r => r.estado === 'entregada').length
     doc.text(
-      `Total: $${ganancia.total_ganancia.toLocaleString()} | Reparaciones: ${ganancia.reparaciones.length}`,
-      14,
-      startY + 5
+      `Total: $${ganancia.total_ganancia.toLocaleString()} | ${ganancia.reparaciones.length} reparaciones (${reparacionesPagadas} pagadas)`,
+      18,
+      startY + 6
     )
     
-    startY += 10
+    doc.setTextColor(0, 0, 0)
+    startY += 14
     
     // Tabla de reparaciones
     const tableData = ganancia.reparaciones.map(rep => [
@@ -89,34 +107,56 @@ export async function generarPDFEstadisticasTecnicos(
     
     autoTable(doc, {
       startY: startY,
-      head: [['N° Comprobante', 'Detalle', 'Mano de Obra', 'Estado', 'Fecha']],
+      head: [['N° Comp.', 'Detalle', 'Mano de Obra', 'Estado', 'Fecha']],
       body: tableData,
-      theme: 'grid',
+      theme: 'striped',
       styles: {
         fontSize: 9,
-        cellPadding: 3
+        cellPadding: 4,
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
       },
       headStyles: {
         fillColor: [59, 130, 246],
         textColor: 255,
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        fontSize: 9,
+        cellPadding: 5
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
       },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 80 },
-        2: { cellWidth: 30, halign: 'right' },
-        3: { cellWidth: 30, halign: 'center' }
+        0: { cellWidth: 28, halign: 'left' },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 30, halign: 'right', fontStyle: 'bold' },
+        3: { cellWidth: 28, halign: 'center', fontSize: 8 },
+        4: { cellWidth: 28, halign: 'center' }
       },
-      margin: { left: 14, right: 14 }
+      margin: { left: 14, right: 14 },
+      didParseCell: function(data) {
+        // Colorear la columna de estado
+        if (data.column.index === 3 && data.section === 'body') {
+          if (data.cell.raw === 'Pagada') {
+            data.cell.styles.textColor = [22, 163, 74] // Verde
+            data.cell.styles.fontStyle = 'bold'
+          } else {
+            data.cell.styles.textColor = [202, 138, 4] // Amarillo oscuro
+          }
+        }
+        // Colorear mano de obra
+        if (data.column.index === 2 && data.section === 'body') {
+          if (data.cell.raw === 'Sin asignar') {
+            data.cell.styles.textColor = [156, 163, 175] // Gris
+            data.cell.styles.fontStyle = 'italic'
+          } else {
+            data.cell.styles.textColor = [22, 163, 74] // Verde
+          }
+        }
+      }
     })
     
-    startY = (doc as any).lastAutoTable.finalY + 5
-    
-    // Verificar si necesitamos una nueva página
-    if (startY > doc.internal.pageSize.getHeight() - 30 && index < ganancias.length - 1) {
-      doc.addPage()
-      startY = 20
-    }
+    startY = (doc as any).lastAutoTable.finalY + 8
   })
   
   // Footer con fecha de generación
@@ -126,11 +166,17 @@ export async function generarPDFEstadisticasTecnicos(
     doc.setFontSize(8)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(128, 128, 128)
+    const footerY = pageHeight - 10
     doc.text(
-      `Generado: ${new Date().toLocaleDateString('es-AR')} | Página ${i} de ${totalPages}`,
-      pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
-      { align: 'center' }
+      `Generado: ${new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+      14,
+      footerY
+    )
+    doc.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth - 14,
+      footerY,
+      { align: 'right' }
     )
   }
   
