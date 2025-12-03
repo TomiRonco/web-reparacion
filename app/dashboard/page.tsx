@@ -952,7 +952,10 @@ function ModalDiagnostico({
 
   const [nuevoRepuesto, setNuevoRepuesto] = useState<RepuestoItem>({
     detalle: '',
-    precio: 0
+    precio: 0,
+    marca: '',
+    capacidad: '',
+    proveedor: ''
   })
 
   const agregarRepuesto = () => {
@@ -970,7 +973,7 @@ function ModalDiagnostico({
       repuestos: [...formData.repuestos, nuevoRepuesto]
     })
     
-    setNuevoRepuesto({ detalle: '', precio: 0 })
+    setNuevoRepuesto({ detalle: '', precio: 0, marca: '', capacidad: '', proveedor: '' })
   }
 
   const eliminarRepuesto = (index: number) => {
@@ -1073,7 +1076,12 @@ function ModalDiagnostico({
                   <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">{repuesto.detalle}</p>
-                      <p className="text-sm text-slate-600">${repuesto.precio.toLocaleString()}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <p className="text-xs text-slate-600">Precio: ${repuesto.precio.toLocaleString()}</p>
+                        {repuesto.marca && <p className="text-xs text-slate-600">• Marca: {repuesto.marca}</p>}
+                        {repuesto.capacidad && <p className="text-xs text-slate-600">• Capacidad: {repuesto.capacidad}</p>}
+                        {repuesto.proveedor && <p className="text-xs text-slate-600">• Proveedor: {repuesto.proveedor}</p>}
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -1091,34 +1099,73 @@ function ModalDiagnostico({
             {/* Formulario para agregar nuevo repuesto */}
             <div className="bg-blue-50 p-4 rounded-lg space-y-3">
               <p className="text-sm font-medium text-slate-700">Agregar Repuesto</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <input
-                    type="text"
-                    value={nuevoRepuesto.detalle}
-                    onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, detalle: e.target.value })}
-                    placeholder="Detalle del repuesto"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
-                  />
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Detalle*</label>
+                    <input
+                      type="text"
+                      value={nuevoRepuesto.detalle}
+                      onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, detalle: e.target.value })}
+                      placeholder="Ej: Pantalla LCD"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Precio*</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={nuevoRepuesto.precio}
+                      onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, precio: parseFloat(e.target.value) || 0 })}
+                      placeholder="0.00"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="flex space-x-2">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={nuevoRepuesto.precio}
-                    onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, precio: parseFloat(e.target.value) || 0 })}
-                    placeholder="Precio"
-                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
-                  />
-                  <button
-                    type="button"
-                    onClick={agregarRepuesto}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition whitespace-nowrap"
-                  >
-                    + Agregar
-                  </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Marca</label>
+                    <input
+                      type="text"
+                      value={nuevoRepuesto.marca}
+                      onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, marca: e.target.value })}
+                      placeholder="Ej: Samsung"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Capacidad</label>
+                    <input
+                      type="text"
+                      value={nuevoRepuesto.capacidad}
+                      onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, capacidad: e.target.value })}
+                      placeholder="Ej: 8GB, 256GB"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Proveedor</label>
+                    <input
+                      type="text"
+                      value={nuevoRepuesto.proveedor}
+                      onChange={(e) => setNuevoRepuesto({ ...nuevoRepuesto, proveedor: e.target.value })}
+                      placeholder="Ej: DistribuidorX"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 text-sm"
+                    />
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={agregarRepuesto}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  + Agregar Repuesto
+                </button>
               </div>
             </div>
           </div>

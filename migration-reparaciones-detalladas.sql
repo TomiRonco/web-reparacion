@@ -15,7 +15,7 @@ WHERE monto IS NOT NULL AND mano_obra = 0;
 
 -- 3. Comentarios sobre las columnas
 COMMENT ON COLUMN reparaciones.mano_obra IS 'Costo de la mano de obra de la reparación';
-COMMENT ON COLUMN reparaciones.repuestos IS 'Array de repuestos con estructura: [{detalle: string, precio: number}]';
+COMMENT ON COLUMN reparaciones.repuestos IS 'Array de repuestos con estructura: [{detalle: string, precio: number, marca?: string, capacidad?: string, proveedor?: string}]';
 COMMENT ON COLUMN reparaciones.contrasena IS 'Contraseña de la notebook/PC (opcional)';
 COMMENT ON COLUMN reparaciones.monto IS 'Monto total calculado: mano_obra + suma(repuestos.precio)';
 

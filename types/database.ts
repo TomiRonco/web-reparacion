@@ -30,6 +30,9 @@ export type EstadoReparacion = 'pendiente' | 'en_proceso' | 'finalizada' | 'entr
 export interface RepuestoItem {
   detalle: string
   precio: number
+  marca?: string
+  capacidad?: string
+  proveedor?: string
 }
 
 export interface Reparacion {
