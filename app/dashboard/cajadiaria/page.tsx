@@ -7,6 +7,7 @@ import { ArrowDownCircle, ArrowUpCircle, Download, X, Calculator, Printer } from
 import * as XLSX from 'xlsx'
 import { generarPDFCajaDiaria } from '@/lib/pdf-caja-diaria'
 import type { ConfiguracionLocal } from '@/types/database'
+import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeletons'
 
 export default function CajaDiariaPage() {
   const [transacciones, setTransacciones] = useState<TransaccionCaja[]>([])
@@ -197,6 +198,21 @@ export default function CajaDiariaPage() {
   const total = calcularTotal()
   const totalIngresos = calcularTotalIngresos()
   const totalEgresos = calcularTotalEgresos()
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+          <div className="h-8 bg-slate-200 rounded animate-pulse w-1/3 mb-2"></div>
+          <div className="h-4 bg-slate-200 rounded animate-pulse w-1/4"></div>
+        </div>
+        <StatsSkeleton count={3} />
+        <div className="mt-6">
+          <TableSkeleton rows={8} columns={4} />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100">

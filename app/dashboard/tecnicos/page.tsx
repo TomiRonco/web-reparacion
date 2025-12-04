@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X } from 'lucide-react'
 import type { Tecnico, TecnicoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
+import { CardSkeleton } from '@/components/LoadingSkeletons'
 
 export default function TecnicosPage() {
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([])
@@ -95,8 +96,9 @@ export default function TecnicosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div>
+        <PageHeader title="Técnicos" gradient="purple" />
+        <CardSkeleton count={4} />
       </div>
     )
   }

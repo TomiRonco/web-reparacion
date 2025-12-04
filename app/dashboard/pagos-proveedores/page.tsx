@@ -6,6 +6,7 @@ import { Plus, Edit2, Trash2, X, Receipt, DollarSign, TrendingUp, TrendingDown, 
 import type { ProveedorPago, Comprobante, PagoRealizado, ComprobanteFormData, PagoFormData, ResumenProveedor, TipoComprobante, Moneda, ConfiguracionLocal } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { generarPDFPagosProveedor } from '@/lib/pdf-pagos-proveedores'
+import { GridSkeleton, CardSkeleton } from '@/components/LoadingSkeletons'
 
 export default function PagosProveedoresPage() {
   const [proveedores, setProveedores] = useState<ProveedorPago[]>([])
@@ -214,11 +215,14 @@ export default function PagosProveedoresPage() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col bg-slate-50">
-        <PageHeader
-          title="Pagos a Proveedores"
-        />
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-slate-500">Cargando...</p>
+        <PageHeader title="Pagos a Proveedores" />
+        <div className="flex-1 flex p-6 gap-6">
+          <div className="w-64">
+            <CardSkeleton count={3} />
+          </div>
+          <div className="flex-1">
+            <GridSkeleton count={6} />
+          </div>
         </div>
       </div>
     )

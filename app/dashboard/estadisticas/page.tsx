@@ -23,6 +23,7 @@ import {
 import type { Tecnico, Reparacion } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { descargarPDFEstadisticasTecnicos } from '@/lib/pdf-estadisticas-tecnicos'
+import { StatsSkeleton, GridSkeleton } from '@/components/LoadingSkeletons'
 
 type TabType = 'reparaciones' | 'stock' | 'tecnicos'
 
@@ -431,8 +432,19 @@ export default function EstadisticasPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div>
+        <PageHeader title="Estadísticas" gradient="green" />
+        <div className="mb-6 border-b border-slate-200">
+          <div className="flex space-x-1">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="px-6 py-3 h-12 w-40 bg-slate-100 rounded-t animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+        <StatsSkeleton count={6} />
+        <div className="mt-6">
+          <GridSkeleton count={6} />
+        </div>
       </div>
     )
   }

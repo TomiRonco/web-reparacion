@@ -6,6 +6,7 @@ import PageHeader from '@/components/PageHeader'
 import { generarPDFPresupuesto } from '@/lib/pdf-presupuesto'
 import type { Presupuesto, PresupuestoItem, ConfiguracionLocal } from '@/types/database'
 import { Plus, X, Download, Trash2, Edit } from 'lucide-react'
+import { GridSkeleton } from '@/components/LoadingSkeletons'
 
 export default function PresupuestosPage() {
   const supabase = createClient()
@@ -240,8 +241,9 @@ export default function PresupuestosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        <PageHeader title="Presupuestos" gradient="purple" />
+        <GridSkeleton count={6} />
       </div>
     )
   }

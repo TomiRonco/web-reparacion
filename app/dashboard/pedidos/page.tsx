@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, ShoppingCart, CheckCircle, Circle } from 'lucide-react'
 import type { Pedido, ItemPedido, PedidoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
+import { GridSkeleton } from '@/components/LoadingSkeletons'
 
 export default function PedidosPage() {
   const [pedidos, setPedidos] = useState<Pedido[]>([])
@@ -115,6 +116,24 @@ export default function PedidosPage() {
 
   const totalPendientes = pedidos.filter(p => !p.completado).length
   const totalCompletados = pedidos.filter(p => p.completado).length
+
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden">
+        <PageHeader title="Gestión de Pedidos" gradient="blue" />
+        <div className="flex-1 overflow-auto p-6">
+          <div className="mb-6">
+            <div className="grid grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-3 rounded-lg border-2 bg-slate-100 animate-pulse h-24"></div>
+              ))}
+            </div>
+          </div>
+          <GridSkeleton count={6} />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
