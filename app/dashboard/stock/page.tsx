@@ -10,6 +10,8 @@ import BarcodeGenerator from '@/components/BarcodeGenerator'
 import { useDebounce } from '@/hooks/useDebounce'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import { EmptyState } from '@/components/EmptyState'
+import { Button } from '@/components/Button'
 
 export default function StockPage() {
   const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
@@ -645,32 +647,25 @@ export default function StockPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {contenedoresFiltrados.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <div className="bg-white rounded-lg shadow">
             {filtroBusqueda ? (
-              <>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No se encontraron resultados</h3>
-                <p className="text-slate-500 mb-6">No hay contenedores o productos que coincidan con &quot;{filtroBusqueda}&quot;</p>
-                <button
-                  onClick={() => setFiltroBusqueda('')}
-                  className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
-                >
-                  <X className="w-5 h-5" />
-                  <span>Limpiar búsqueda</span>
-                </button>
-              </>
+              <EmptyState
+                icon={Package}
+                title="No se encontraron resultados"
+                description={`No hay contenedores o productos que coincidan con "${filtroBusqueda}"`}
+                actionLabel="Limpiar búsqueda"
+                actionIcon={X}
+                onAction={() => setFiltroBusqueda('')}
+              />
             ) : (
-              <>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay contenedores</h3>
-                <p className="text-slate-500 mb-6">Crea tu primer contenedor para comenzar a gestionar tu stock</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Crear Contenedor</span>
-                </button>
-              </>
+              <EmptyState
+                icon={Package}
+                title="No hay contenedores"
+                description="Crea tu primer contenedor para comenzar a gestionar tu stock"
+                actionLabel="Crear Contenedor"
+                actionIcon={Plus}
+                onAction={() => setShowModal(true)}
+              />
             )}
           </div>
         ) : (

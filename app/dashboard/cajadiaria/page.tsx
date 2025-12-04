@@ -10,6 +10,7 @@ import type { ConfiguracionLocal } from '@/types/database'
 import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
 import PageHeader from '@/components/PageHeader'
+import { Button } from '@/components/Button'
 
 export default function CajaDiariaPage() {
   const supabase = createClient()
@@ -224,22 +225,22 @@ export default function CajaDiariaPage() {
           gradient="rose"
           actions={
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
+                variant="success"
+                icon={Download}
                 onClick={exportarExcel}
                 disabled={transacciones.length === 0}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                <Download className="w-4 h-4" />
-                <span>Excel</span>
-              </button>
-              <button
+                Excel
+              </Button>
+              <Button
+                variant="danger"
+                icon={Printer}
                 onClick={exportarPDF}
                 disabled={transacciones.length === 0}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                <Printer className="w-4 h-4" />
-                <span>PDF</span>
-              </button>
+                PDF
+              </Button>
             </div>
           }
         />
