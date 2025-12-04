@@ -171,6 +171,7 @@ export interface ItemStock {
   cantidad: number
   costo?: number
   moneda?: MonedaStock
+  codigo_barras?: string
 }
 
 export type UbicacionStock = 'adelante' | 'atras'
