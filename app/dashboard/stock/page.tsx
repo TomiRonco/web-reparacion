@@ -371,33 +371,6 @@ export default function StockPage() {
       }
     }
   }
-        const itemConPrecio = itemsConPrecio.find(
-          ip => ip.detalle === item.detalle.toLowerCase()
-        )
-        
-        if (itemConPrecio) {
-          huboChangios = true
-          console.log(`Actualizando ${item.detalle} en contenedor ${contenedor.nombre}:`, itemConPrecio)
-          return { ...item, costo: itemConPrecio.costo, moneda: itemConPrecio.moneda }
-        }
-        return item
-      })
-
-      // Solo actualizar si hubo cambios
-      if (huboChangios) {
-        console.log(`Guardando cambios en contenedor ${contenedor.nombre}`)
-        const { error } = await supabase
-          .from('contenedores')
-          .update({ items: itemsActualizados })
-          .eq('id', contenedor.id)
-        
-        if (error) {
-          console.error('Error al actualizar contenedor:', error)
-        }
-      }
-    }
-    console.log('Sincronización completada')
-  }
 
   const handleEliminarContenedor = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este contenedor?')) return
