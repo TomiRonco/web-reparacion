@@ -8,6 +8,7 @@ import { generarPDFStock } from '@/lib/pdf-stock'
 import PageHeader from '@/components/PageHeader'
 import BarcodeGenerator from '@/components/BarcodeGenerator'
 import { useDebounce } from '@/hooks/useDebounce'
+import { GridSkeleton } from '@/components/LoadingSkeletons'
 
 export default function StockPage() {
   const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
@@ -531,8 +532,19 @@ export default function StockPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-slate-500">Cargando...</p>
+      <div className="h-screen flex flex-col overflow-hidden">
+        <PageHeader title="Gestión de Stock" gradient="purple" />
+        <div className="flex-1 overflow-auto p-6">
+          <div className="mb-6">
+            <div className="flex gap-2 mb-4">
+              {['adelante', 'atras'].map((tab) => (
+                <div key={tab} className="px-6 py-2 h-10 w-32 bg-slate-100 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+            <div className="h-10 bg-slate-100 rounded-lg animate-pulse"></div>
+          </div>
+          <GridSkeleton count={6} />
+        </div>
       </div>
     )
   }
