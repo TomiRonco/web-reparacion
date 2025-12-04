@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import type { Tecnico, Reparacion } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
-import { descargarPDFEstadisticasTecnicos } from '@/lib/pdf-estadisticas-tecnicos'
+import { descargarPDFEstadisticasTecnicos, descargarPDFTecnicoIndividual } from '@/lib/pdf-estadisticas-tecnicos'
 import { StatsSkeleton, GridSkeleton } from '@/components/LoadingSkeletons'
 
 type TabType = 'reparaciones' | 'stock' | 'tecnicos'
@@ -1142,6 +1142,23 @@ function TabTecnicos({
     await descargarPDFEstadisticasTecnicos(ganancias, inicio, fin, nombreLocal)
   }
 
+  const handleExportarPDFIndividual = async (ganancia: GananciaTecnico) => {
+    let inicio: string, fin: string
+
+    if (tipoFiltro === 'mes') {
+      const [year, month] = mesSeleccionado.split('-').map(Number)
+      const firstDay = new Date(year, month - 1, 1)
+      const lastDay = new Date(year, month, 0)
+      inicio = firstDay.toISOString().split('T')[0]
+      fin = lastDay.toISOString().split('T')[0]
+    } else {
+      inicio = fechaInicio
+      fin = fechaFin
+    }
+
+    await descargarPDFTecnicoIndividual(ganancia, inicio, fin, nombreLocal)
+  }
+
   return (
     <>
       {/* Filtros */}
@@ -1294,9 +1311,19 @@ function TabTecnicos({
                       {ganancia.reparaciones.length} reparaciones • {ganancia.reparaciones.filter(r => r.estado === 'entregada').length} pagadas
                     </p>
                   </div>
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
-                    <p className="text-sm font-medium">Total Mano de Obra</p>
-                    <p className="text-2xl font-bold">${ganancia.total_ganancia.toLocaleString()}</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleExportarPDFIndividual(ganancia)}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                      title="Descargar PDF individual"
+                    >
+                      <Download className="w-4 h-4" />
+                      PDF
+                    </button>
+                    <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
+                      <p className="text-sm font-medium">Total Mano de Obra</p>
+                      <p className="text-2xl font-bold">${ganancia.total_ganancia.toLocaleString()}</p>
+                    </div>
                   </div>
                 </div>
               </div>
