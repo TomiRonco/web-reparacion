@@ -145,10 +145,10 @@ export default function CajaDiariaPage() {
   const totalEgresos = calcularTotalEgresos()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex-1 flex flex-col p-6 overflow-hidden">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-shrink-0">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -227,7 +227,7 @@ export default function CajaDiariaPage() {
         </div>
 
         {/* Resumen */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 flex-shrink-0">
           <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
             <div className="flex items-center gap-3 mb-2">
               <ArrowUpCircle className="w-8 h-8 text-green-600" />
@@ -259,8 +259,8 @@ export default function CajaDiariaPage() {
         </div>
 
         {/* Lista de transacciones */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden flex-1 flex flex-col min-h-0">
+          <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4 flex-shrink-0">
             <h2 className="text-xl font-bold text-white">
               Transacciones del {formatearFecha(fechaFiltro + 'T00:00:00')}
             </h2>
@@ -275,9 +275,9 @@ export default function CajaDiariaPage() {
               No hay transacciones para este día
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-auto flex-1">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-slate-50 sticky top-0">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Hora
