@@ -27,6 +27,7 @@ export default function StockPage() {
   const [codigoGenerado, setCodigoGenerado] = useState('')
   const [showEditarItem, setShowEditarItem] = useState(false)
   const [editingItem, setEditingItem] = useState<{contenedor: Contenedor, item: ItemStock, index: number} | null>(null)
+  const [filtroBusqueda, setFiltroBusqueda] = useState('')
   
   const supabase = createClient()
 
@@ -47,6 +48,23 @@ export default function StockPage() {
     }
     setLoading(false)
   }
+
+  // Filtrar contenedores por nombre o items
+  const contenedoresFiltrados = contenedores.filter(contenedor => {
+    if (!filtroBusqueda.trim()) return true
+    
+    const busqueda = filtroBusqueda.toLowerCase()
+    
+    // Buscar en nombre del contenedor
+    if (contenedor.nombre.toLowerCase().includes(busqueda)) {
+      return true
+    }
+    
+    // Buscar en items del contenedor
+    return contenedor.items.some((item: ItemStock) => 
+      item.detalle.toLowerCase().includes(busqueda)
+    )
+  })
 
   useEffect(() => {
     fetchContenedores()
@@ -411,7 +429,14 @@ export default function StockPage() {
           title="Gestión de Stock"
           gradient="purple"
           actions={
-            <div className="flex space-x-3">
+            <div className="flex items-center space-x-3">
+              <input
+                type="text"
+                value={filtroBusqueda}
+                onChange={(e) => setFiltroBusqueda(e.target.value)}
+                placeholder="Buscar contenedor o producto..."
+                className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-64 text-sm"
+              />
               <button
                 onClick={() => setShowBarcodeScanner(!showBarcodeScanner)}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition shadow-md font-semibold text-sm ${
@@ -490,22 +515,38 @@ export default function StockPage() {
       {/* Lista de Contenedores con scroll */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {contenedores.length === 0 ? (
+        {contenedoresFiltrados.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No hay contenedores</h3>
-            <p className="text-slate-500 mb-6">Crea tu primer contenedor para comenzar a gestionar tu stock</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Crear Contenedor</span>
-            </button>
+            {filtroBusqueda ? (
+              <>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No se encontraron resultados</h3>
+                <p className="text-slate-500 mb-6">No hay contenedores o productos que coincidan con &quot;{filtroBusqueda}&quot;</p>
+                <button
+                  onClick={() => setFiltroBusqueda('')}
+                  className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
+                >
+                  <X className="w-5 h-5" />
+                  <span>Limpiar búsqueda</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No hay contenedores</h3>
+                <p className="text-slate-500 mb-6">Crea tu primer contenedor para comenzar a gestionar tu stock</p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Crear Contenedor</span>
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {contenedores.map((contenedor) => (
+            {contenedoresFiltrados.map((contenedor) => (
               <div key={contenedor.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
                 {/* Header del Contenedor */}
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-4 text-white">
