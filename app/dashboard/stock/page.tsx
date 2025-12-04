@@ -859,7 +859,7 @@ function ModalContenedor({
   const agregarItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { detalle: '', cantidad: 1, costo: 0, moneda: 'ARS' }]
+      items: [...formData.items, { detalle: '', cantidad: 0, costo: 0, moneda: 'ARS' }]
     })
   }
 
@@ -1021,6 +1021,7 @@ function ModalContenedor({
                             type="number"
                             required
                             min="0"
+                            step="1"
                             value={item.cantidad}
                             onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
                             className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
