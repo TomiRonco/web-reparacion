@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toast'
 export default function ConfiguracionPage() {
   const supabase = createClient()
   const { showToast } = useToast()
+  const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -27,8 +28,6 @@ export default function ConfiguracionPage() {
     whatsapp: '',
     horarios: ''
   })
-
-  const supabase = createClient()
 
   const fetchConfig = async () => {
     setLoading(true)
