@@ -435,7 +435,7 @@ export default function StockPage() {
                 value={filtroBusqueda}
                 onChange={(e) => setFiltroBusqueda(e.target.value)}
                 placeholder="Buscar contenedor o producto..."
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-64 text-sm"
+                className="px-4 py-2 bg-white border-2 border-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 w-64 text-sm font-medium text-slate-900 placeholder:text-slate-500 shadow-sm"
               />
               <button
                 onClick={() => setShowBarcodeScanner(!showBarcodeScanner)}
