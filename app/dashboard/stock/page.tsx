@@ -516,6 +516,8 @@ export default function StockPage() {
     if (!editingItem) return
 
     const { contenedor, item, index } = editingItem
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
     // Actualizar el item en el contenedor
     const itemsActualizados = [...contenedor.items]
@@ -529,6 +531,17 @@ export default function StockPage() {
     if (error) {
       alert('Error al actualizar código de barras')
       return
+    }
+
+    // Sincronizar el código de barras en todas las ubicaciones
+    if (nuevoCodigo.trim()) {
+      await sincronizarCodigosBarrasEnTodasUbicaciones(user.id, [{
+        detalle: item.detalle.toLowerCase(),
+        codigo_barras: nuevoCodigo
+      }])
+    } else {
+      // Si se eliminó el código, eliminarlo de todas las ubicaciones
+      await eliminarCodigosBarrasDeTodasUbicaciones(user.id, [item.detalle.toLowerCase()])
     }
 
     await fetchContenedores()
