@@ -9,6 +9,7 @@ import PageHeader from '@/components/PageHeader'
 import BarcodeGenerator from '@/components/BarcodeGenerator'
 import { useDebounce } from '@/hooks/useDebounce'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function StockPage() {
   const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
@@ -30,6 +31,9 @@ export default function StockPage() {
   const [showEditarItem, setShowEditarItem] = useState(false)
   const [editingItem, setEditingItem] = useState<{contenedor: Contenedor, item: ItemStock, index: number} | null>(null)
   const [filtroBusqueda, setFiltroBusqueda] = useState('')
+  
+  const supabase = createClient()
+  const { showToast } = useToast()
   
   // Aplicar debounce a la búsqueda para optimizar performance
   const busquedaDebounced = useDebounce(filtroBusqueda, 300)
@@ -170,7 +174,7 @@ export default function StockPage() {
         .eq('id', editingContenedor.id)
 
       if (error) {
-        alert('Error al actualizar el contenedor')
+        showToast('error', 'Error al actualizar el contenedor')
         return
       }
     } else {
@@ -203,7 +207,7 @@ export default function StockPage() {
         })
 
       if (error) {
-        alert('Error al crear el contenedor')
+        showToast('error', 'Error al crear el contenedor')
         return
       }
     }
@@ -388,7 +392,7 @@ export default function StockPage() {
       .eq('id', id)
 
     if (error) {
-      alert('Error al eliminar el contenedor')
+      showToast('error', 'Error al eliminar el contenedor')
       return
     }
 
@@ -438,7 +442,7 @@ export default function StockPage() {
       setItemToDiscount(foundItem)
       setShowDescontar(true)
     } else {
-      alert(`No se encontró ningún artículo con el código: ${code}`)
+      showToast('warning', `No se encontró ningún artículo con el código: ${code}`)
     }
   }
 
@@ -452,7 +456,7 @@ export default function StockPage() {
       : item.cantidad - cantidad
 
     if (nuevaCantidad < 0) {
-      alert('No se puede tener cantidad negativa')
+      showToast('warning', 'No se puede tener cantidad negativa')
       return
     }
 
@@ -475,7 +479,7 @@ export default function StockPage() {
       .eq('id', contenedor.id)
 
     if (error) {
-      alert('Error al actualizar la cantidad')
+      showToast('error', 'Error al actualizar la cantidad')
       return
     }
 
@@ -509,7 +513,7 @@ export default function StockPage() {
       .eq('id', contenedor.id)
 
     if (error) {
-      alert('Error al actualizar código de barras')
+      showToast('error', 'Error al actualizar código de barras')
       return
     }
 
@@ -527,7 +531,7 @@ export default function StockPage() {
     await fetchContenedores()
     setShowEditarItem(false)
     setEditingItem(null)
-    alert('Código de barras actualizado')
+    showToast('success', 'Código de barras actualizado')
   }
 
   if (loading) {
@@ -884,7 +888,7 @@ export default function StockPage() {
                   if (codigo) {
                     handleActualizarCodigoBarras(codigo)
                   } else {
-                    alert('Por favor ingrese un código')
+                    showToast('warning', 'Por favor ingrese un código')
                   }
                 }}
                 className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
@@ -942,9 +946,9 @@ export default function StockPage() {
                   if (!isNaN(cantidad) && cantidad >= 0 && cantidad <= itemToDiscount.item.cantidad) {
                     handleModificarCantidad(cantidad, 'restar')
                   } else if (cantidad > itemToDiscount.item.cantidad) {
-                    alert('La cantidad a descontar es mayor que la disponible')
+                    showToast('warning', 'La cantidad a descontar es mayor que la disponible')
                   } else {
-                    alert('Ingrese una cantidad válida')
+                    showToast('warning', 'Ingrese una cantidad válida')
                   }
                 }}
                 className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium"
@@ -1099,7 +1103,7 @@ function ModalContenedor({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.nombre.trim()) {
-      alert('El nombre del contenedor es obligatorio')
+      showToast('warning', 'El nombre del contenedor es obligatorio')
       return
     }
     onSubmit(formData)
