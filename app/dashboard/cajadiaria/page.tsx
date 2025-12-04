@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TransaccionCaja, TransaccionCajaFormData } from '@/types/database'
-import { ArrowDownCircle, ArrowUpCircle, Download, X, Calculator } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Download, X, Calculator, Printer } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { generarPDFCajaDiaria } from '@/lib/pdf-caja-diaria'
+import type { ConfiguracionLocal } from '@/types/database'
 
 export default function CajaDiariaPage() {
   const [transacciones, setTransacciones] = useState<TransaccionCaja[]>([])
@@ -12,12 +14,29 @@ export default function CajaDiariaPage() {
   const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split('T')[0])
   const [monto, setMonto] = useState<string>('')
   const [detalle, setDetalle] = useState('')
+  const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
 
   const supabase = createClient()
 
   useEffect(() => {
     fetchTransacciones()
+    fetchConfig()
   }, [fechaFiltro])
+
+  const fetchConfig = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('configuracion_local')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (data) {
+      setConfig(data)
+    }
+  }
 
   const fetchTransacciones = async () => {
     setLoading(true)
@@ -153,6 +172,17 @@ export default function CajaDiariaPage() {
     XLSX.writeFile(wb, fileName)
   }
 
+  const exportarPDF = () => {
+    generarPDFCajaDiaria(
+      transacciones,
+      fechaFiltro,
+      calcularTotalIngresos(),
+      calcularTotalEgresos(),
+      calcularTotal(),
+      config?.nombre_local || undefined
+    )
+  }
+
   const formatearHora = (fechaHora: string) => {
     return new Date(fechaHora).toLocaleTimeString('es-AR', { 
       hour: '2-digit', 
@@ -193,6 +223,14 @@ export default function CajaDiariaPage() {
                 >
                   <Calculator className="w-5 h-5" />
                   Marcar Caja
+                </button>
+                <button
+                  onClick={exportarPDF}
+                  disabled={transacciones.length === 0}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Printer className="w-5 h-5" />
+                  Imprimir PDF
                 </button>
                 <button
                   onClick={exportarExcel}
