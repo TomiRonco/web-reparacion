@@ -279,3 +279,22 @@ export interface ResumenProveedor {
   deuda_ars: number
   deuda_usd: number
 }
+
+// Caja Diaria
+export type TipoTransaccion = 'ingreso' | 'egreso'
+
+export interface TransaccionCaja {
+  id: string
+  user_id: string
+  tipo: TipoTransaccion
+  monto: number
+  detalle: string
+  fecha_hora: string
+  created_at: string
+}
+
+export interface TransaccionCajaFormData {
+  tipo: TipoTransaccion
+  monto: number
+  detalle: string
+}

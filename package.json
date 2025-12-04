@@ -21,7 +21,8 @@
     "react": "19.2.0",
     "react-barcode-reader": "^0.0.2",
     "react-dom": "19.2.0",
-    "react-to-print": "^3.2.0"
+    "react-to-print": "^3.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
