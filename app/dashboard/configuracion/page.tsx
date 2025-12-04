@@ -6,6 +6,7 @@ import { Save, Upload } from 'lucide-react'
 import type { ConfiguracionLocal } from '@/types/database'
 import Image from 'next/image'
 import PageHeader from '@/components/PageHeader'
+import { CardSkeleton } from '@/components/LoadingSkeletons'
 
 export default function ConfiguracionPage() {
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
@@ -156,8 +157,11 @@ export default function ConfiguracionPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div>
+        <PageHeader title="Configuración del Local" gradient="orange" />
+        <div className="max-w-4xl mx-auto">
+          <CardSkeleton count={2} />
+        </div>
       </div>
     )
   }
