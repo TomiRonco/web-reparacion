@@ -72,9 +72,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen bg-slate-50">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r border-slate-200">
+      <aside className="hidden lg:flex lg:flex-col w-16 hover:w-64 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out group overflow-hidden">
         {/* Header del Sidebar */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-slate-200 flex items-center justify-center group-hover:justify-start">
           {config?.logo_url ? (
             <div className="flex items-center space-x-3">
               <Image 
@@ -85,19 +85,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="rounded-lg object-cover flex-shrink-0"
               />
               {config.nombre_local && (
-                <h2 className="text-base font-bold text-slate-900 leading-tight break-words">
+                <h2 className="text-base font-bold text-slate-900 leading-tight break-words opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                   {config.nombre_local}
                 </h2>
               )}
             </div>
           ) : config?.nombre_local ? (
-            <h2 className="text-lg font-bold text-slate-900 leading-tight break-words">
-              {config.nombre_local}
-            </h2>
+            <div className="flex items-center space-x-3">
+              <Wrench className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <h2 className="text-lg font-bold text-slate-900 leading-tight break-words opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                {config.nombre_local}
+              </h2>
+            </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Wrench className="w-8 h-8 text-blue-600" />
-              <h2 className="text-xl font-bold text-slate-900">
+              <Wrench className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <h2 className="text-xl font-bold text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                 Reparaciones
               </h2>
             </div>
@@ -119,9 +122,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     ? 'bg-blue-50 text-blue-700 font-medium'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
+                title={item.name}
               >
-                <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">{item.name}</span>
               </button>
             )
           })}
@@ -129,25 +133,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Footer del Sidebar */}
         <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col space-y-2">
             <button
               onClick={() => router.push('/dashboard/configuracion')}
-              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 pathname === '/dashboard/configuracion'
                   ? 'bg-blue-50 text-blue-700 font-medium'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
+              title="Configuración"
             >
-              <Settings className="w-5 h-5" />
-              <span>Configuración</span>
+              <Settings className="w-5 h-5 flex-shrink-0" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Configuración</span>
             </button>
             
             <button
               onClick={handleLogout}
-              className="p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
               title="Cerrar Sesión"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Cerrar Sesión</span>
             </button>
           </div>
         </div>
