@@ -121,7 +121,7 @@ export default function PedidosPage() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col overflow-hidden">
-        <PageHeader title="Gestión de Pedidos" gradient="purple" />
+        <PageHeader title="Gestión de Pedidos" gradient="indigo" />
         <div className="flex-1 overflow-auto p-6">
           <div className="mb-6">
             <div className="grid grid-cols-3 gap-4">

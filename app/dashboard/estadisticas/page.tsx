@@ -433,7 +433,7 @@ export default function EstadisticasPage() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Estadísticas" gradient="green" />
+        <PageHeader title="Estadísticas" gradient="teal" />
         <div className="mb-6 border-b border-slate-200">
           <div className="flex space-x-1">
             {[1, 2, 3].map((i) => (

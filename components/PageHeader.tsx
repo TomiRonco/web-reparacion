@@ -3,18 +3,20 @@ import { ReactNode } from 'react'
 interface PageHeaderProps {
   title: string
   actions?: ReactNode
-  gradient?: 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'teal' | 'indigo' | 'slate'
+  gradient?: 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'teal' | 'indigo' | 'slate' | 'cyan' | 'rose'
 }
 
 const gradients = {
-  blue: 'bg-gradient-to-r from-blue-600 to-blue-700',
-  purple: 'bg-gradient-to-r from-purple-600 to-purple-700',
-  green: 'bg-gradient-to-r from-green-600 to-green-700',
-  orange: 'bg-gradient-to-r from-orange-600 to-orange-700',
-  pink: 'bg-gradient-to-r from-pink-600 to-pink-700',
-  teal: 'bg-gradient-to-r from-teal-600 to-teal-700',
-  indigo: 'bg-gradient-to-r from-indigo-600 to-indigo-700',
-  slate: 'bg-gradient-to-r from-slate-700 to-slate-800',
+  blue: 'bg-gradient-to-r from-blue-600 to-cyan-600',
+  purple: 'bg-gradient-to-r from-purple-600 to-pink-600',
+  green: 'bg-gradient-to-r from-green-600 to-emerald-600',
+  orange: 'bg-gradient-to-r from-orange-600 to-red-600',
+  pink: 'bg-gradient-to-r from-pink-600 to-rose-600',
+  teal: 'bg-gradient-to-r from-teal-600 to-cyan-600',
+  indigo: 'bg-gradient-to-r from-indigo-600 to-blue-600',
+  slate: 'bg-gradient-to-r from-slate-700 to-gray-800',
+  cyan: 'bg-gradient-to-r from-cyan-600 to-blue-600',
+  rose: 'bg-gradient-to-r from-rose-600 to-pink-600',
 }
 
 export default function PageHeader({ title, actions, gradient = 'blue' }: PageHeaderProps) {

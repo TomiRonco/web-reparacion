@@ -221,7 +221,7 @@ export default function CajaDiariaPage() {
       <div className="flex-1 flex flex-col p-6 overflow-hidden">
         <PageHeader 
           title="Caja Diaria" 
-          gradient="pink"
+          gradient="rose"
           actions={
             <div className="flex flex-wrap gap-2">
               <button

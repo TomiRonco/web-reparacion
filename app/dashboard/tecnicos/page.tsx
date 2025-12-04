@@ -98,7 +98,7 @@ export default function TecnicosPage() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Técnicos" gradient="purple" />
+        <PageHeader title="Técnicos" gradient="cyan" />
         <CardSkeleton count={4} />
       </div>
     )
