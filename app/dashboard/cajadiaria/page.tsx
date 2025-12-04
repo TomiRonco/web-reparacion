@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TransaccionCaja, TransaccionCajaFormData } from '@/types/database'
-import { ArrowDownCircle, ArrowUpCircle, Download, X } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Download, X, Calculator } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 export default function CajaDiariaPage() {
@@ -92,6 +92,32 @@ export default function CajaDiariaPage() {
     fetchTransacciones()
   }
 
+  const handleMarcarCaja = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const totalActual = calcularTotal()
+    const ahora = new Date()
+    const hora = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    
+    const { error } = await supabase
+      .from('transacciones_caja')
+      .insert([{
+        user_id: user.id,
+        tipo: 'ingreso',
+        monto: 0,
+        detalle: `📊 CIERRE DE CAJA - ${hora} - Total: $${totalActual.toFixed(2)}`
+      }])
+
+    if (error) {
+      console.error('Error al marcar caja:', error)
+      alert('Error al marcar el cierre de caja')
+      return
+    }
+
+    fetchTransacciones()
+  }
+
   const handleEliminar = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta transacción?')) return
 
@@ -163,6 +189,13 @@ export default function CajaDiariaPage() {
                   onChange={(e) => setFechaFiltro(e.target.value)}
                   className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <button
+                  onClick={handleMarcarCaja}
+                  className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <Calculator className="w-5 h-5" />
+                  Marcar Caja
+                </button>
                 <button
                   onClick={exportarExcel}
                   disabled={transacciones.length === 0}
