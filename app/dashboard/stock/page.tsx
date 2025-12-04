@@ -321,12 +321,14 @@ export default function StockPage() {
     }
   }
 
-  // Descontar cantidad del item escaneado
-  const handleDescontarCantidad = async (cantidadADescontar: number) => {
+  // Modificar cantidad del item escaneado (sumar o restar)
+  const handleModificarCantidad = async (cantidad: number, operacion: 'sumar' | 'restar') => {
     if (!itemToDiscount) return
 
     const { contenedor, item } = itemToDiscount
-    const nuevaCantidad = item.cantidad - cantidadADescontar
+    const nuevaCantidad = operacion === 'sumar' 
+      ? item.cantidad + cantidad 
+      : item.cantidad - cantidad
 
     if (nuevaCantidad < 0) {
       alert('La cantidad a descontar es mayor que la disponible')
@@ -726,12 +728,12 @@ export default function StockPage() {
         </div>
       )}
 
-      {/* Modal para Descontar Cantidad */}
+      {/* Modal para Modificar Cantidad */}
       {showDescontar && itemToDiscount && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
-              Descontar Stock
+              Modificar Stock
             </h3>
             <p className="text-sm text-slate-600 mb-2">
               <strong>{itemToDiscount.item.detalle}</strong>
@@ -740,39 +742,57 @@ export default function StockPage() {
               Stock actual: <strong>{itemToDiscount.item.cantidad}</strong> unidades
             </p>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Cantidad a descontar:
+              Cantidad:
             </label>
             <input
               type="number"
               min="1"
-              max={itemToDiscount.item.cantidad}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="Ingrese cantidad..."
-              id="cantidad-descontar"
+              id="cantidad-modificar"
+              autoFocus
             />
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 mb-3">
               <button
                 onClick={() => {
-                  setShowDescontar(false)
-                  setItemToDiscount(null)
-                }}
-                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  const input = document.getElementById('cantidad-descontar') as HTMLInputElement
+                  const input = document.getElementById('cantidad-modificar') as HTMLInputElement
                   const cantidad = parseInt(input.value)
-                  if (cantidad > 0 && cantidad <= itemToDiscount.item.cantidad) {
-                    handleDescontarCantidad(cantidad)
+                  if (cantidad > 0) {
+                    handleModificarCantidad(cantidad, 'sumar')
+                  } else {
+                    alert('Ingrese una cantidad válida')
                   }
                 }}
-                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
               >
-                Confirmar
+                + Agregar
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.getElementById('cantidad-modificar') as HTMLInputElement
+                  const cantidad = parseInt(input.value)
+                  if (cantidad > 0 && cantidad <= itemToDiscount.item.cantidad) {
+                    handleModificarCantidad(cantidad, 'restar')
+                  } else if (cantidad > itemToDiscount.item.cantidad) {
+                    alert('La cantidad a descontar es mayor que la disponible')
+                  } else {
+                    alert('Ingrese una cantidad válida')
+                  }
+                }}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium"
+              >
+                - Descontar
               </button>
             </div>
+            <button
+              onClick={() => {
+                setShowDescontar(false)
+                setItemToDiscount(null)
+              }}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}
