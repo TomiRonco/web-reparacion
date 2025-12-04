@@ -116,6 +116,8 @@ export default function StockPage() {
 
     const itemsConPrecioModificado: Array<{detalle: string, costo: number, moneda: MonedaStock}> = []
     const itemsSinPrecio: string[] = []
+    const itemsConCodigoBarras: Array<{detalle: string, codigo_barras: string}> = []
+    const itemsSinCodigoBarras: string[] = []
     
     if (editingContenedor) {
       // Si estamos editando, verificar TODOS los items con precio para sincronizar
@@ -135,6 +137,18 @@ export default function StockPage() {
         // Si el precio se eliminó
         else if (itemOriginal && itemOriginal.costo && itemOriginal.costo > 0) {
           itemsSinPrecio.push(itemNuevo.detalle.toLowerCase())
+        }
+        
+        // Si el item tiene código de barras, sincronizarlo
+        if (itemNuevo.codigo_barras) {
+          itemsConCodigoBarras.push({
+            detalle: itemNuevo.detalle.toLowerCase(),
+            codigo_barras: itemNuevo.codigo_barras
+          })
+        }
+        // Si el código se eliminó
+        else if (itemOriginal && itemOriginal.codigo_barras) {
+          itemsSinCodigoBarras.push(itemNuevo.detalle.toLowerCase())
         }
       })
 
@@ -160,6 +174,14 @@ export default function StockPage() {
             detalle: item.detalle.toLowerCase(),
             costo: item.costo,
             moneda: item.moneda || 'ARS'
+          })
+        }
+        
+        // Detectar items con código de barras para sincronizar
+        if (item.codigo_barras) {
+          itemsConCodigoBarras.push({
+            detalle: item.detalle.toLowerCase(),
+            codigo_barras: item.codigo_barras
           })
         }
       })
@@ -189,6 +211,18 @@ export default function StockPage() {
     if (itemsSinPrecio.length > 0) {
       console.log('Eliminando precios:', itemsSinPrecio)
       await eliminarPreciosDeTodasUbicaciones(user.id, itemsSinPrecio)
+    }
+
+    // Sincronizar códigos de barras en todos los contenedores
+    if (itemsConCodigoBarras.length > 0) {
+      console.log('Sincronizando códigos de barras:', itemsConCodigoBarras)
+      await sincronizarCodigosBarrasEnTodasUbicaciones(user.id, itemsConCodigoBarras)
+    }
+
+    // Si hay items con códigos eliminados, eliminar en todos los contenedores
+    if (itemsSinCodigoBarras.length > 0) {
+      console.log('Eliminando códigos de barras:', itemsSinCodigoBarras)
+      await eliminarCodigosBarrasDeTodasUbicaciones(user.id, itemsSinCodigoBarras)
     }
 
     // Recargar todos los contenedores para reflejar cambios en ambas ubicaciones
@@ -248,6 +282,95 @@ export default function StockPage() {
     for (const contenedor of todosContenedores) {
       let huboChangios = false
       const itemsActualizados = contenedor.items.map((item: ItemStock) => {
+        const precioActualizado = itemsConPrecio.find(
+          p => p.detalle === item.detalle.toLowerCase()
+        )
+        if (precioActualizado) {
+          huboChangios = true
+          return { ...item, costo: precioActualizado.costo, moneda: precioActualizado.moneda }
+        }
+        return item
+      })
+
+      if (huboChangios) {
+        await supabase
+          .from('contenedores')
+          .update({ items: itemsActualizados })
+          .eq('id', contenedor.id)
+      }
+    }
+  }
+
+  const sincronizarCodigosBarrasEnTodasUbicaciones = async (
+    userId: string,
+    itemsConCodigo: Array<{detalle: string, codigo_barras: string}>
+  ) => {
+    // Obtener todos los contenedores del usuario
+    const { data: todosContenedores, error: errorFetch } = await supabase
+      .from('contenedores')
+      .select('*')
+      .eq('user_id', userId)
+
+    if (errorFetch || !todosContenedores) {
+      console.error('Error al obtener contenedores:', errorFetch)
+      return
+    }
+
+    console.log('Sincronizando códigos en', todosContenedores.length, 'contenedores')
+
+    // Actualizar cada contenedor con los nuevos códigos de barras
+    for (const contenedor of todosContenedores) {
+      let huboChangios = false
+      const itemsActualizados = contenedor.items.map((item: ItemStock) => {
+        const codigoActualizado = itemsConCodigo.find(
+          c => c.detalle === item.detalle.toLowerCase()
+        )
+        if (codigoActualizado) {
+          huboChangios = true
+          return { ...item, codigo_barras: codigoActualizado.codigo_barras }
+        }
+        return item
+      })
+
+      if (huboChangios) {
+        await supabase
+          .from('contenedores')
+          .update({ items: itemsActualizados })
+          .eq('id', contenedor.id)
+      }
+    }
+  }
+
+  const eliminarCodigosBarrasDeTodasUbicaciones = async (userId: string, detallesSinCodigo: string[]) => {
+    // Obtener todos los contenedores del usuario
+    const { data: todosContenedores, error: errorFetch } = await supabase
+      .from('contenedores')
+      .select('*')
+      .eq('user_id', userId)
+
+    if (errorFetch || !todosContenedores) return
+
+    // Actualizar cada contenedor eliminando los códigos de barras de los items especificados
+    for (const contenedor of todosContenedores) {
+      let huboChangios = false
+      const itemsActualizados = contenedor.items.map((item: ItemStock) => {
+        if (detallesSinCodigo.includes(item.detalle.toLowerCase())) {
+          huboChangios = true
+          const { codigo_barras, ...itemSinCodigo } = item
+          return itemSinCodigo
+        }
+        return item
+      })
+
+      // Solo actualizar si hubo cambios
+      if (huboChangios) {
+        await supabase
+          .from('contenedores')
+          .update({ items: itemsActualizados })
+          .eq('id', contenedor.id)
+      }
+    }
+  }
         const itemConPrecio = itemsConPrecio.find(
           ip => ip.detalle === item.detalle.toLowerCase()
         )
