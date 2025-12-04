@@ -13,7 +13,8 @@ import {
   FileText,
   Package,
   ShoppingCart,
-  Receipt
+  Receipt,
+  Wallet
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
@@ -25,6 +26,7 @@ interface DashboardLayoutProps {
 }
 
 const menuItems = [
+  { name: 'Caja Diaria', href: '/dashboard/cajadiaria', icon: Wallet },
   { name: 'Reparaciones', href: '/dashboard', icon: Wrench },
   { name: 'Presupuestos', href: '/dashboard/presupuestos', icon: FileText },
   { name: 'Stock', href: '/dashboard/stock', icon: Package },
