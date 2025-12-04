@@ -105,7 +105,7 @@ export default function CajaDiariaPage() {
       .insert([{
         user_id: user.id,
         tipo: 'ingreso',
-        monto: 0,
+        monto: 0.01,
         detalle: `📊 CIERRE DE CAJA - ${hora} - Total: $${totalActual.toFixed(2)}`
       }])
 
