@@ -1018,12 +1018,18 @@ function ModalContenedor({
         const preciosMap = new Map<string, { costo?: number, moneda?: MonedaStock, codigo_barras?: string }>()
         todosLosItems.forEach((item: ItemStock) => {
           const key = item.detalle.toLowerCase()
-          if (!preciosMap.has(key) && item.costo !== undefined && item.costo > 0) {
-            preciosMap.set(key, { 
-              costo: item.costo, 
-              moneda: item.moneda,
-              codigo_barras: item.codigo_barras 
-            })
+          if (!preciosMap.has(key)) {
+            // Agregar si tiene precio o código de barras
+            const tienePrecio = item.costo !== undefined && item.costo > 0
+            const tieneCodigo = item.codigo_barras && item.codigo_barras.trim() !== ''
+            
+            if (tienePrecio || tieneCodigo) {
+              preciosMap.set(key, { 
+                costo: item.costo, 
+                moneda: item.moneda,
+                codigo_barras: item.codigo_barras 
+              })
+            }
           }
         })
         setItemsPreciosMap(preciosMap)
