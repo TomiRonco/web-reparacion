@@ -118,14 +118,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 key={item.href}
                 onClick={() => router.push(item.href)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center justify-center group-hover:justify-start space-x-3 px-4 py-3 rounded-lg transition-all ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 font-medium'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
                 title={item.name}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
+                <Icon className="w-5 h-5 shrink-0" />
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">{item.name}</span>
               </button>
             )
@@ -137,23 +137,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex flex-col space-y-2">
             <button
               onClick={() => router.push('/dashboard/configuracion')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center justify-center group-hover:justify-start space-x-3 px-4 py-3 rounded-lg transition-all ${
                 pathname === '/dashboard/configuracion'
                   ? 'bg-blue-50 text-blue-700 font-medium'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
               title="Configuración"
             >
-              <Settings className="w-5 h-5 flex-shrink-0" />
+              <Settings className="w-5 h-5 shrink-0" />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Configuración</span>
             </button>
             
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center justify-center group-hover:justify-start space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all"
               title="Cerrar Sesión"
             >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <LogOut className="w-5 h-5 shrink-0" />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Cerrar Sesión</span>
             </button>
           </div>
