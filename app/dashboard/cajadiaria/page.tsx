@@ -56,7 +56,7 @@ export default function CajaDiariaPage() {
       .eq('user_id', user.id)
       .gte('fecha_hora', fechaInicio)
       .lte('fecha_hora', fechaFin)
-      .order('fecha_hora', { ascending: false })
+      .order('fecha_hora', { ascending: true })
 
     if (!error && data) {
       setTransacciones(data)
