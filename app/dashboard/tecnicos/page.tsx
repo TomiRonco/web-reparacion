@@ -11,11 +11,10 @@ import { useToast } from '@/components/Toast'
 export default function TecnicosPage() {
   const supabase = createClient()
   const { showToast } = useToast()
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
-  
-  const supabase = createClient()
 
   const fetchTecnicos = async () => {
     setLoading(true)
