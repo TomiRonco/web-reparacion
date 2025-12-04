@@ -992,7 +992,7 @@ function ModalContenedor({
     items: contenedor?.items || []
   })
   const [itemsUnicos, setItemsUnicos] = useState<string[]>([])
-  const [itemsPreciosMap, setItemsPreciosMap] = useState<Map<string, { costo?: number, moneda?: MonedaStock }>>(new Map())
+  const [itemsPreciosMap, setItemsPreciosMap] = useState<Map<string, { costo?: number, moneda?: MonedaStock, codigo_barras?: string }>>(new Map())
   const [sugerenciasActivas, setSugerenciasActivas] = useState<{ [key: number]: boolean }>({})
   
   const supabase = createClient()
@@ -1014,12 +1014,16 @@ function ModalContenedor({
           Array.isArray(cont.items) ? cont.items : []
         )
         
-        // Crear mapa de precios (usar el primer item con precio encontrado para cada detalle)
-        const preciosMap = new Map<string, { costo?: number, moneda?: MonedaStock }>()
+        // Crear mapa de precios y códigos de barras (usar el primer item encontrado para cada detalle)
+        const preciosMap = new Map<string, { costo?: number, moneda?: MonedaStock, codigo_barras?: string }>()
         todosLosItems.forEach((item: ItemStock) => {
           const key = item.detalle.toLowerCase()
           if (!preciosMap.has(key) && item.costo !== undefined && item.costo > 0) {
-            preciosMap.set(key, { costo: item.costo, moneda: item.moneda })
+            preciosMap.set(key, { 
+              costo: item.costo, 
+              moneda: item.moneda,
+              codigo_barras: item.codigo_barras 
+            })
           }
         })
         setItemsPreciosMap(preciosMap)
@@ -1061,11 +1065,15 @@ function ModalContenedor({
     const nuevosItems = [...formData.items]
     nuevosItems[index].detalle = sugerencia
     
-    // Autocompletar precio y moneda si existe en el map
+    // Autocompletar precio, moneda y código de barras si existe en el map
     const precioInfo = itemsPreciosMap.get(sugerencia.toLowerCase())
     if (precioInfo?.costo && precioInfo.costo > 0) {
       nuevosItems[index].costo = precioInfo.costo
       nuevosItems[index].moneda = precioInfo.moneda || 'ARS'
+    }
+    // Autocompletar código de barras si existe
+    if (precioInfo?.codigo_barras) {
+      nuevosItems[index].codigo_barras = precioInfo.codigo_barras
     }
     
     setFormData({ ...formData, items: nuevosItems })
