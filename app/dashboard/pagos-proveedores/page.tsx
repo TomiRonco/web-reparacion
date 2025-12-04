@@ -660,6 +660,42 @@ export default function PagosProveedoresPage() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirmProveedor}
+        onClose={() => setShowConfirmProveedor(false)}
+        onConfirm={confirmDeleteProveedor}
+        title="Eliminar Proveedor"
+        message="¿Estás seguro de que deseas eliminar este proveedor? Se eliminarán todos sus comprobantes y pagos asociados. Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingProveedor}
+      />
+
+      <ConfirmDialog
+        isOpen={showConfirmComprobante}
+        onClose={() => setShowConfirmComprobante(false)}
+        onConfirm={confirmDeleteComprobante}
+        title="Eliminar Comprobante"
+        message="¿Estás seguro de que deseas eliminar este comprobante? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingComprobante}
+      />
+
+      <ConfirmDialog
+        isOpen={showConfirmPago}
+        onClose={() => setShowConfirmPago(false)}
+        onConfirm={confirmDeletePago}
+        title="Eliminar Pago"
+        message="¿Estás seguro de que deseas eliminar este pago? Los comprobantes asociados volverán a marcarse como no pagados. Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingPago}
+      />
     </div>
   )
 }
@@ -1165,42 +1201,6 @@ function ModalPago({
           </form>
         )}
       </div>
-
-      <ConfirmDialog
-        isOpen={showConfirmProveedor}
-        onClose={() => setShowConfirmProveedor(false)}
-        onConfirm={confirmDeleteProveedor}
-        title="Eliminar Proveedor"
-        message="¿Estás seguro de que deseas eliminar este proveedor? Se eliminarán todos sus comprobantes y pagos asociados. Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deletingProveedor}
-      />
-
-      <ConfirmDialog
-        isOpen={showConfirmComprobante}
-        onClose={() => setShowConfirmComprobante(false)}
-        onConfirm={confirmDeleteComprobante}
-        title="Eliminar Comprobante"
-        message="¿Estás seguro de que deseas eliminar este comprobante? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deletingComprobante}
-      />
-
-      <ConfirmDialog
-        isOpen={showConfirmPago}
-        onClose={() => setShowConfirmPago(false)}
-        onConfirm={confirmDeletePago}
-        title="Eliminar Pago"
-        message="¿Estás seguro de que deseas eliminar este pago? Los comprobantes asociados volverán a marcarse como no pagados. Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deletingPago}
-      />
     </div>
   )
 }
