@@ -244,7 +244,7 @@ export default function PresupuestosPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Presupuestos" gradient="purple" />
+        <PageHeader title="Presupuestos" gradient="indigo" />
         <GridSkeleton count={6} />
       </div>
     )

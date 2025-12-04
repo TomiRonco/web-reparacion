@@ -9,6 +9,7 @@ import { generarPDFCajaDiaria } from '@/lib/pdf-caja-diaria'
 import type { ConfiguracionLocal } from '@/types/database'
 import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import PageHeader from '@/components/PageHeader'
 
 export default function CajaDiariaPage() {
   const supabase = createClient()
@@ -218,6 +219,30 @@ export default function CajaDiariaPage() {
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="flex-1 flex flex-col p-6 overflow-hidden">
+        <PageHeader 
+          title="Caja Diaria" 
+          gradient="pink"
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportarExcel}
+                disabled={transacciones.length === 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Excel</span>
+              </button>
+              <button
+                onClick={exportarPDF}
+                disabled={transacciones.length === 0}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Printer className="w-4 h-4" />
+                <span>PDF</span>
+              </button>
+            </div>
+          }
+        />
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-shrink-0">
           <div className="flex flex-col gap-4">

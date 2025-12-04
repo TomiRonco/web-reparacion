@@ -535,7 +535,7 @@ export default function StockPage() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col overflow-hidden">
-        <PageHeader title="Gestión de Stock" gradient="purple" />
+        <PageHeader title="Gestión de Stock" gradient="teal" />
         <div className="flex-1 overflow-auto p-6">
           <div className="mb-6">
             <div className="flex gap-2 mb-4">

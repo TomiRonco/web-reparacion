@@ -216,7 +216,7 @@ export default function PagosProveedoresPage() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col bg-slate-50">
-        <PageHeader title="Pagos a Proveedores" />
+        <PageHeader title="Pagos a Proveedores" gradient="slate" />
         <div className="flex-1 flex p-6 gap-6">
           <div className="w-64">
             <CardSkeleton count={3} />
