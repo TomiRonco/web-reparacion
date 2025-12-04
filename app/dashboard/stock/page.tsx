@@ -1002,6 +1002,7 @@ function ModalContenedor({
   onClose: () => void
   onSubmit: (data: ContenedorFormData) => void
 }) {
+  const { showToast } = useToast()
   const [formData, setFormData] = useState<ContenedorFormData>({
     nombre: contenedor?.nombre || '',
     items: contenedor?.items || []
