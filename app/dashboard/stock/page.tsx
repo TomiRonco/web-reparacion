@@ -37,8 +37,6 @@ export default function StockPage() {
   
   // Aplicar debounce a la búsqueda para optimizar performance
   const busquedaDebounced = useDebounce(filtroBusqueda, 300)
-  
-  const supabase = createClient()
 
   const fetchContenedores = async () => {
     setLoading(true)
