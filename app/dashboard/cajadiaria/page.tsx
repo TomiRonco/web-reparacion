@@ -3,19 +3,15 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TransaccionCaja, TransaccionCajaFormData } from '@/types/database'
-import { ArrowDownCircle, ArrowUpCircle, Download, Plus, X } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Download, X } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 export default function CajaDiariaPage() {
   const [transacciones, setTransacciones] = useState<TransaccionCaja[]>([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
   const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split('T')[0])
-  const [formData, setFormData] = useState<TransaccionCajaFormData>({
-    tipo: 'ingreso',
-    monto: 0,
-    detalle: ''
-  })
+  const [monto, setMonto] = useState<string>('')
+  const [detalle, setDetalle] = useState('')
 
   const supabase = createClient()
 
@@ -66,13 +62,12 @@ export default function CajaDiariaPage() {
       .reduce((sum, t) => sum + Number(t.monto), 0)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleAgregarTransaccion = async (tipo: 'ingreso' | 'egreso') => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    if (!formData.detalle.trim() || formData.monto <= 0) {
+    const montoNum = Number(monto)
+    if (!detalle.trim() || montoNum <= 0) {
       alert('Por favor completa todos los campos correctamente')
       return
     }
@@ -81,9 +76,9 @@ export default function CajaDiariaPage() {
       .from('transacciones_caja')
       .insert([{
         user_id: user.id,
-        tipo: formData.tipo,
-        monto: formData.monto,
-        detalle: formData.detalle
+        tipo: tipo,
+        monto: montoNum,
+        detalle: detalle
       }])
 
     if (error) {
@@ -92,8 +87,8 @@ export default function CajaDiariaPage() {
       return
     }
 
-    setShowModal(false)
-    setFormData({ tipo: 'ingreso', monto: 0, detalle: '' })
+    setMonto('')
+    setDetalle('')
     fetchTransacciones()
   }
 
@@ -154,34 +149,79 @@ export default function CajaDiariaPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">Caja Diaria</h1>
-              <p className="text-slate-600 mt-1">Gestión de ingresos y egresos</p>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">Caja Diaria</h1>
+                <p className="text-slate-600 mt-1">Gestión de ingresos y egresos</p>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="date"
+                  value={fechaFiltro}
+                  onChange={(e) => setFechaFiltro(e.target.value)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  onClick={exportarExcel}
+                  disabled={transacciones.length === 0}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-5 h-5" />
+                  Exportar Excel
+                </button>
+              </div>
             </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <input
-                type="date"
-                value={fechaFiltro}
-                onChange={(e) => setFechaFiltro(e.target.value)}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Nueva Transacción
-              </button>
-              <button
-                onClick={exportarExcel}
-                disabled={transacciones.length === 0}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="w-5 h-5" />
-                Exportar Excel
-              </button>
+
+            {/* Formulario de transacción */}
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <div className="md:col-span-5">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Detalle
+                  </label>
+                  <input
+                    type="text"
+                    value={detalle}
+                    onChange={(e) => setDetalle(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Descripción de la transacción"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Monto
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={monto}
+                    onChange={(e) => setMonto(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="md:col-span-4 flex gap-2">
+                  <button
+                    onClick={() => handleAgregarTransaccion('ingreso')}
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <ArrowUpCircle className="w-5 h-5" />
+                    Ingreso
+                  </button>
+                  <button
+                    onClick={() => handleAgregarTransaccion('egreso')}
+                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <ArrowDownCircle className="w-5 h-5" />
+                    Egreso
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -300,98 +340,6 @@ export default function CajaDiariaPage() {
           )}
         </div>
       </div>
-
-      {/* Modal Nueva Transacción */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-t-lg">
-              <h3 className="text-xl font-bold text-white">Nueva Transacción</h3>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tipo de Transacción
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="tipo"
-                      value="ingreso"
-                      checked={formData.tipo === 'ingreso'}
-                      onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ingreso' | 'egreso' })}
-                      className="w-4 h-4 text-green-600"
-                    />
-                    <span className="text-sm font-medium text-slate-700">Ingreso</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="tipo"
-                      value="egreso"
-                      checked={formData.tipo === 'egreso'}
-                      onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ingreso' | 'egreso' })}
-                      className="w-4 h-4 text-red-600"
-                    />
-                    <span className="text-sm font-medium text-slate-700">Egreso</span>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Monto
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={formData.monto || ''}
-                  onChange={(e) => setFormData({ ...formData, monto: Number(e.target.value) })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Detalle
-                </label>
-                <textarea
-                  value={formData.detalle}
-                  onChange={(e) => setFormData({ ...formData, detalle: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Descripción de la transacción"
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false)
-                    setFormData({ tipo: 'ingreso', monto: 0, detalle: '' })
-                  }}
-                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Guardar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
