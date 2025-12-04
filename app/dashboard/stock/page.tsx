@@ -331,7 +331,7 @@ export default function StockPage() {
       : item.cantidad - cantidad
 
     if (nuevaCantidad < 0) {
-      alert('La cantidad a descontar es mayor que la disponible')
+      alert('No se puede tener cantidad negativa')
       return
     }
 
@@ -746,7 +746,7 @@ export default function StockPage() {
             </label>
             <input
               type="number"
-              min="1"
+              min="0"
               className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="Ingrese cantidad..."
               id="cantidad-modificar"
@@ -757,7 +757,7 @@ export default function StockPage() {
                 onClick={() => {
                   const input = document.getElementById('cantidad-modificar') as HTMLInputElement
                   const cantidad = parseInt(input.value)
-                  if (cantidad > 0) {
+                  if (!isNaN(cantidad) && cantidad >= 0) {
                     handleModificarCantidad(cantidad, 'sumar')
                   } else {
                     alert('Ingrese una cantidad válida')
@@ -771,7 +771,7 @@ export default function StockPage() {
                 onClick={() => {
                   const input = document.getElementById('cantidad-modificar') as HTMLInputElement
                   const cantidad = parseInt(input.value)
-                  if (cantidad > 0 && cantidad <= itemToDiscount.item.cantidad) {
+                  if (!isNaN(cantidad) && cantidad >= 0 && cantidad <= itemToDiscount.item.cantidad) {
                     handleModificarCantidad(cantidad, 'restar')
                   } else if (cantidad > itemToDiscount.item.cantidad) {
                     alert('La cantidad a descontar es mayor que la disponible')
@@ -1020,7 +1020,7 @@ function ModalContenedor({
                           <input
                             type="number"
                             required
-                            min="1"
+                            min="0"
                             value={item.cantidad}
                             onChange={(e) => actualizarItem(index, 'cantidad', e.target.value)}
                             className="w-full px-3 py-2.5 bg-white border-2 border-slate-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 font-bold text-center shadow-sm"
