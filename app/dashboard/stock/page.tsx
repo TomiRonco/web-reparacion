@@ -333,10 +333,18 @@ export default function StockPage() {
       return
     }
 
-    // Actualizar el item en el contenedor
-    const itemsActualizados = contenedor.items.map((it: ItemStock) =>
-      it.id === item.id ? { ...it, cantidad: nuevaCantidad } : it
-    )
+    // Actualizar el item específico en el contenedor usando el código de barras
+    const itemsActualizados = contenedor.items.map((it: ItemStock) => {
+      // Comparar por código de barras (más confiable)
+      if (it.codigo_barras && it.codigo_barras === item.codigo_barras) {
+        return { ...it, cantidad: nuevaCantidad }
+      }
+      // Si no tiene código, comparar por detalle y cantidad original
+      if (it.detalle === item.detalle && it.cantidad === item.cantidad) {
+        return { ...it, cantidad: nuevaCantidad }
+      }
+      return it
+    })
 
     const { error } = await supabase
       .from('contenedores')
