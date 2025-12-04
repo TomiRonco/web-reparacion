@@ -733,6 +733,7 @@ function ModalComprobante({
   onClose: () => void
   onSubmit: () => void
 }) {
+  const { showToast } = useToast()
   const [formData, setFormData] = useState<ComprobanteFormData>({
     proveedor_id: proveedorId,
     tipo: comprobante?.tipo || 'factura',
@@ -904,6 +905,7 @@ function ModalPago({
   onClose: () => void
   onSubmit: () => void
 }) {
+  const { showToast } = useToast()
   const [formData, setFormData] = useState<PagoFormData>({
     proveedor_id: proveedorId,
     comprobante_ids: [],
