@@ -243,16 +243,11 @@ export default function CajaDiariaPage() {
             </div>
           }
         />
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-4 flex-shrink-0">
+        {/* Formulario de nueva transacción */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-4 shrink-0">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800">Caja Diaria</h1>
-                <p className="text-slate-600 mt-1">Gestión de ingresos y egresos</p>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3">
                 <input
                   type="date"
                   value={fechaFiltro}
@@ -265,22 +260,6 @@ export default function CajaDiariaPage() {
                 >
                   <Calculator className="w-5 h-5" />
                   Marcar Caja
-                </button>
-                <button
-                  onClick={exportarPDF}
-                  disabled={transacciones.length === 0}
-                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Printer className="w-5 h-5" />
-                  Imprimir PDF
-                </button>
-                <button
-                  onClick={exportarExcel}
-                  disabled={transacciones.length === 0}
-                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Download className="w-5 h-5" />
-                  Exportar Excel
                 </button>
               </div>
             </div>
