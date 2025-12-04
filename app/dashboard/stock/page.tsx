@@ -12,12 +12,16 @@ import { GridSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/Button'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function StockPage() {
   const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
   const [contenedores, setContenedores] = useState<Contenedor[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [contenedorToDelete, setContenedorToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [editingContenedor, setEditingContenedor] = useState<Contenedor | null>(null)
   
   // Estados para códigos de barra
@@ -384,19 +388,30 @@ export default function StockPage() {
   }
 
   const handleEliminarContenedor = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este contenedor?')) return
+    setContenedorToDelete(id)
+    setShowConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!contenedorToDelete) return
+
+    setDeleting(true)
     const { error } = await supabase
       .from('contenedores')
       .delete()
-      .eq('id', id)
+      .eq('id', contenedorToDelete)
 
     if (error) {
       showToast('error', 'Error al eliminar el contenedor')
+      setDeleting(false)
       return
     }
 
     await fetchContenedores()
+    showToast('success', 'Contenedor eliminado exitosamente')
+    setDeleting(false)
+    setShowConfirm(false)
+    setContenedorToDelete(null)
   }
 
   const handleExportarPDF = async () => {
@@ -1270,5 +1285,20 @@ function ModalContenedor({
         </form>
       </div>
     </div>
+  )
+}
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Contenedor"
+        message="¿Estás seguro de que deseas eliminar este contenedor? Esta acción no se puede deshacer y se eliminarán todos los items asociados al contenedor."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
+    </>
   )
 }

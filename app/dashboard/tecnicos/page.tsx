@@ -9,6 +9,7 @@ import { CardSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/Button'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function TecnicosPage() {
   const supabase = createClient()
@@ -17,6 +18,9 @@ export default function TecnicosPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [tecnicoToDelete, setTecnicoToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchTecnicos = async () => {
     setLoading(true)
@@ -80,21 +84,30 @@ export default function TecnicosPage() {
   }
 
   const handleEliminarTecnico = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este técnico? Esta acción no se puede deshacer.')) {
-      return
-    }
+    setTecnicoToDelete(id)
+    setShowConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!tecnicoToDelete) return
+
+    setDeleting(true)
     const { error } = await supabase
       .from('tecnicos')
       .delete()
-      .eq('id', id)
+      .eq('id', tecnicoToDelete)
 
     if (error) {
       showToast('error', 'Error al eliminar el técnico. Puede que tenga reparaciones asignadas.')
+      setDeleting(false)
       return
     }
 
     await fetchTecnicos()
+    showToast('success', 'Técnico eliminado exitosamente')
+    setDeleting(false)
+    setShowConfirm(false)
+    setTecnicoToDelete(null)
   }
 
   if (loading) {
@@ -271,6 +284,22 @@ export default function TecnicosPage() {
           onSubmit={editingTecnico ? handleEditarTecnico : handleAgregarTecnico}
         />
       )}
+
+      {/* Diálogo de Confirmación */}
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => {
+          setShowConfirm(false)
+          setTecnicoToDelete(null)
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar Técnico"
+        message="¿Estás seguro de eliminar este técnico? Esta acción no se puede deshacer y puede afectar las reparaciones asignadas."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   )
 }

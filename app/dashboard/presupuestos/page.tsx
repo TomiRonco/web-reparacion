@@ -10,6 +10,7 @@ import { GridSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/Button'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function PresupuestosPage() {
   const supabase = createClient()
@@ -18,6 +19,9 @@ export default function PresupuestosPage() {
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [presupuestoToDelete, setPresupuestoToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [modalAbierto, setModalAbierto] = useState(false)
   const [presupuestoEditando, setPresupuestoEditando] = useState<Presupuesto | null>(null)
 
@@ -230,20 +234,31 @@ export default function PresupuestosPage() {
 
   // Eliminar presupuesto
   const eliminarPresupuesto = async (id: string) => {
-    if (!confirm('¿Está seguro de eliminar este presupuesto?')) return
+    setPresupuestoToDelete(id)
+    setShowConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!presupuestoToDelete) return
+
+    setDeleting(true)
     const { error } = await supabase
       .from('presupuestos')
       .delete()
-      .eq('id', id)
+      .eq('id', presupuestoToDelete)
 
     if (error) {
       console.error('Error al eliminar presupuesto:', error)
       showToast('error', 'Error al eliminar el presupuesto')
+      setDeleting(false)
       return
     }
 
     await cargarDatos()
+    showToast('success', 'Presupuesto eliminado exitosamente')
+    setDeleting(false)
+    setShowConfirm(false)
+    setPresupuestoToDelete(null)
   }
 
   if (loading) {
@@ -706,6 +721,18 @@ export default function PresupuestosPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Presupuesto"
+        message="¿Estás seguro de que deseas eliminar este presupuesto? Esta acción no se puede deshacer y se eliminarán todos los items asociados."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   )
 }

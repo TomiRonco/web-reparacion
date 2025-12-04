@@ -11,6 +11,7 @@ import { useToast } from '@/components/Toast'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Badge'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function PagosProveedoresPage() {
   const supabase = createClient()
@@ -18,6 +19,19 @@ export default function PagosProveedoresPage() {
   const [proveedores, setProveedores] = useState<ProveedorPago[]>([])
   const [proveedorActivo, setProveedorActivo] = useState<string | null>(null)
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([])
+  
+  // Confirmation dialog states
+  const [showConfirmProveedor, setShowConfirmProveedor] = useState(false)
+  const [proveedorToDelete, setProveedorToDelete] = useState<string | null>(null)
+  const [deletingProveedor, setDeletingProveedor] = useState(false)
+  
+  const [showConfirmComprobante, setShowConfirmComprobante] = useState(false)
+  const [comprobanteToDelete, setComprobanteToDelete] = useState<string | null>(null)
+  const [deletingComprobante, setDeletingComprobante] = useState(false)
+  
+  const [showConfirmPago, setShowConfirmPago] = useState(false)
+  const [pagoToDelete, setPagoToDelete] = useState<PagoRealizado | null>(null)
+  const [deletingPago, setDeletingPago] = useState(false)
   const [pagos, setPagos] = useState<PagoRealizado[]>([])
   const [loading, setLoading] = useState(true)
   const [showModalProveedor, setShowModalProveedor] = useState(false)
@@ -153,22 +167,85 @@ export default function PagosProveedoresPage() {
   }
 
   const handleEliminarProveedor = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este proveedor? Se eliminarán todos sus comprobantes y pagos.')) return
+    setProveedorToDelete(id)
+    setShowConfirmProveedor(true)
+  }
 
+  const confirmDeleteProveedor = async () => {
+    if (!proveedorToDelete) return
+
+    setDeletingProveedor(true)
     const { error } = await supabase
       .from('proveedores_pago')
       .delete()
-      .eq('id', id)
+      .eq('id', proveedorToDelete)
 
     if (error) {
       showToast('error', 'Error al eliminar el proveedor')
+      setDeletingProveedor(false)
       return
     }
 
     await fetchProveedores()
-    if (proveedorActivo === id) {
+    if (proveedorActivo === proveedorToDelete) {
       setProveedorActivo(proveedores[0]?.id || null)
     }
+    showToast('success', 'Proveedor eliminado exitosamente')
+    setDeletingProveedor(false)
+    setShowConfirmProveedor(false)
+    setProveedorToDelete(null)
+  }
+
+  const confirmDeleteComprobante = async () => {
+    if (!comprobanteToDelete || !proveedorActivo) return
+
+    setDeletingComprobante(true)
+    const { error } = await supabase
+      .from('comprobantes')
+      .delete()
+      .eq('id', comprobanteToDelete)
+
+    if (error) {
+      showToast('error', 'Error al eliminar el comprobante')
+      setDeletingComprobante(false)
+      return
+    }
+
+    await fetchComprobantes(proveedorActivo)
+    showToast('success', 'Comprobante eliminado exitosamente')
+    setDeletingComprobante(false)
+    setShowConfirmComprobante(false)
+    setComprobanteToDelete(null)
+  }
+
+  const confirmDeletePago = async () => {
+    if (!pagoToDelete || !proveedorActivo) return
+
+    setDeletingPago(true)
+    // Marcar comprobantes como no pagados
+    await Promise.all(
+      pagoToDelete.comprobante_ids.map(id =>
+        supabase.from('comprobantes').update({ pagado: false }).eq('id', id)
+      )
+    )
+
+    const { error } = await supabase
+      .from('pagos_realizados')
+      .delete()
+      .eq('id', pagoToDelete.id)
+
+    if (error) {
+      showToast('error', 'Error al eliminar el pago')
+      setDeletingPago(false)
+      return
+    }
+
+    await fetchPagos(proveedorActivo)
+    await fetchComprobantes(proveedorActivo)
+    showToast('success', 'Pago eliminado exitosamente')
+    setDeletingPago(false)
+    setShowConfirmPago(false)
+    setPagoToDelete(null)
   }
 
   const calcularResumen = (): ResumenProveedor => {
@@ -452,10 +529,9 @@ export default function PagosProveedoresPage() {
                                     <Edit2 className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={async () => {
-                                      if (!confirm('¿Eliminar este comprobante?')) return
-                                      await supabase.from('comprobantes').delete().eq('id', comp.id)
-                                      fetchComprobantes(proveedorActivo)
+                                    onClick={() => {
+                                      setComprobanteToDelete(comp.id)
+                                      setShowConfirmComprobante(true)
                                     }}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded"
                                     title="Eliminar"
@@ -515,17 +591,9 @@ export default function PagosProveedoresPage() {
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <button
-                                  onClick={async () => {
-                                    if (!confirm('¿Eliminar este pago?')) return
-                                    // Marcar comprobantes como no pagados
-                                    await Promise.all(
-                                      pago.comprobante_ids.map(id =>
-                                        supabase.from('comprobantes').update({ pagado: false }).eq('id', id)
-                                      )
-                                    )
-                                    await supabase.from('pagos_realizados').delete().eq('id', pago.id)
-                                    fetchPagos(proveedorActivo)
-                                    fetchComprobantes(proveedorActivo)
+                                  onClick={() => {
+                                    setPagoToDelete(pago)
+                                    setShowConfirmPago(true)
                                   }}
                                   className="p-1 text-red-600 hover:bg-red-50 rounded"
                                   title="Eliminar"
@@ -1095,6 +1163,42 @@ function ModalPago({
           </form>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={showConfirmProveedor}
+        onClose={() => setShowConfirmProveedor(false)}
+        onConfirm={confirmDeleteProveedor}
+        title="Eliminar Proveedor"
+        message="¿Estás seguro de que deseas eliminar este proveedor? Se eliminarán todos sus comprobantes y pagos asociados. Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingProveedor}
+      />
+
+      <ConfirmDialog
+        isOpen={showConfirmComprobante}
+        onClose={() => setShowConfirmComprobante(false)}
+        onConfirm={confirmDeleteComprobante}
+        title="Eliminar Comprobante"
+        message="¿Estás seguro de que deseas eliminar este comprobante? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingComprobante}
+      />
+
+      <ConfirmDialog
+        isOpen={showConfirmPago}
+        onClose={() => setShowConfirmPago(false)}
+        onConfirm={confirmDeletePago}
+        title="Eliminar Pago"
+        message="¿Estás seguro de que deseas eliminar este pago? Los comprobantes asociados volverán a marcarse como no pagados. Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deletingPago}
+      />
     </div>
   )
 }

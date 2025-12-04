@@ -11,6 +11,7 @@ import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/components/Button'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function CajaDiariaPage() {
   const supabase = createClient()
@@ -18,6 +19,9 @@ export default function CajaDiariaPage() {
   const [transacciones, setTransacciones] = useState<TransaccionCaja[]>([])
   const [loading, setLoading] = useState(true)
   const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split('T')[0])
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [transaccionToDelete, setTransaccionToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [monto, setMonto] = useState<string>('')
   const [detalle, setDetalle] = useState('')
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
@@ -140,16 +144,30 @@ export default function CajaDiariaPage() {
   }
 
   const handleEliminar = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta transacción?')) return
+    setTransaccionToDelete(id)
+    setShowConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!transaccionToDelete) return
+
+    setDeleting(true)
     const { error } = await supabase
       .from('transacciones_caja')
       .delete()
-      .eq('id', id)
+      .eq('id', transaccionToDelete)
 
-    if (!error) {
-      fetchTransacciones()
+    if (error) {
+      showToast('error', 'Error al eliminar la transacción')
+      setDeleting(false)
+      return
     }
+
+    await fetchTransacciones()
+    showToast('success', 'Transacción eliminada exitosamente')
+    setDeleting(false)
+    setShowConfirm(false)
+    setTransaccionToDelete(null)
   }
 
   const exportarExcel = () => {
@@ -431,6 +449,18 @@ export default function CajaDiariaPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Transacción"
+        message="¿Estás seguro de que deseas eliminar esta transacción? Esta acción no se puede deshacer y afectará el balance de la caja diaria."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   )
 }

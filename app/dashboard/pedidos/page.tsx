@@ -10,6 +10,7 @@ import { useToast } from '@/components/Toast'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Badge'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function PedidosPage() {
   const supabase = createClient()
@@ -19,6 +20,9 @@ export default function PedidosPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingPedido, setEditingPedido] = useState<Pedido | null>(null)
   const [filtro, setFiltro] = useState<'todos' | 'pendientes' | 'completados'>('todos')
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pedidoToDelete, setPedidoToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchPedidos = async () => {
     setLoading(true)
@@ -83,19 +87,30 @@ export default function PedidosPage() {
   }
 
   const handleEliminarPedido = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este pedido?')) return
+    setPedidoToDelete(id)
+    setShowConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!pedidoToDelete) return
+
+    setDeleting(true)
     const { error } = await supabase
       .from('pedidos')
       .delete()
-      .eq('id', id)
+      .eq('id', pedidoToDelete)
 
     if (error) {
       showToast('error', 'Error al eliminar el pedido')
+      setDeleting(false)
       return
     }
 
     await fetchPedidos()
+    showToast('success', 'Pedido eliminado exitosamente')
+    setDeleting(false)
+    setShowConfirm(false)
+    setPedidoToDelete(null)
   }
 
   const handleToggleCompletado = async (pedido: Pedido) => {
@@ -481,5 +496,20 @@ function ModalPedido({
         </form>
       </div>
     </div>
+  )
+}
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Pedido"
+        message="¿Estás seguro de que deseas eliminar este pedido? Esta acción no se puede deshacer y se eliminarán todos los items asociados al pedido."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
+    </>
   )
 }
