@@ -976,6 +976,18 @@ export default function StockPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Eliminar Contenedor"
+        message="¿Estás seguro de que deseas eliminar este contenedor? Esta acción no se puede deshacer y se eliminarán todos los items asociados al contenedor."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   )
 }
@@ -1285,20 +1297,5 @@ function ModalContenedor({
         </form>
       </div>
     </div>
-  )
-}
-
-      <ConfirmDialog
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={confirmDelete}
-        title="Eliminar Contenedor"
-        message="¿Estás seguro de que deseas eliminar este contenedor? Esta acción no se puede deshacer y se eliminarán todos los items asociados al contenedor."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        variant="danger"
-        loading={deleting}
-      />
-    </>
   )
 }
