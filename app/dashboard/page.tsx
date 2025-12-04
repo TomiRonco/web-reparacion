@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Check, Package, X, Download, StickyNote, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Check, Package, X, Download, StickyNote, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Reparacion, Tecnico, ConfiguracionLocal, ReparacionFormData, DiagnosticoFormData, RepuestoItem } from '@/types/database'
 import { generarPDFComprobante, generarPDFBlob } from '@/lib/pdf-generator'
 import { abrirWhatsApp, plantillasWhatsApp, formatearTelefonoArgentino } from '@/lib/whatsapp'
 import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroReparaciones'
 import PageHeader from '@/components/PageHeader'
+import { useDebounce } from '@/hooks/useDebounce'
+import { TableSkeleton, CardSkeleton } from '@/components/LoadingSkeletons'
 
 export default function ReparacionesPage() {
   const [reparaciones, setReparaciones] = useState<Reparacion[]>([])
@@ -24,6 +26,11 @@ export default function ReparacionesPage() {
     busqueda: '',
     estado: 'todos'
   })
+  const [paginaActual, setPaginaActual] = useState(1)
+  const itemsPorPagina = 20
+  
+  // Aplicar debounce a la búsqueda para optimizar performance
+  const busquedaDebounced = useDebounce(filtros.busqueda, 300)
   
   const supabase = createClient()
 
@@ -294,21 +301,34 @@ export default function ReparacionesPage() {
     await fetchData()
   }
 
-  // Filtrado de reparaciones con búsqueda y estado
+  // Filtrado de reparaciones con búsqueda y estado (usando debounce)
   const reparacionesFiltradas = useMemo(() => {
     return reparaciones.filter(r => {
       // Filtro por estado
       const cumpleEstado = filtros.estado === 'todos' ? true : r.estado === filtros.estado
 
-      // Filtro por búsqueda (nombre, apellido o celular)
-      const cumpleBusqueda = filtros.busqueda === '' ? true : 
-        r.cliente_nombre.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
-        r.cliente_apellido.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
-        r.cliente_celular.toLowerCase().includes(filtros.busqueda.toLowerCase())
+      // Filtro por búsqueda (nombre, apellido o celular) con debounce
+      const cumpleBusqueda = busquedaDebounced === '' ? true : 
+        r.cliente_nombre.toLowerCase().includes(busquedaDebounced.toLowerCase()) ||
+        r.cliente_apellido.toLowerCase().includes(busquedaDebounced.toLowerCase()) ||
+        r.cliente_celular.toLowerCase().includes(busquedaDebounced.toLowerCase())
 
       return cumpleEstado && cumpleBusqueda
     })
-  }, [reparaciones, filtros])
+  }, [reparaciones, filtros.estado, busquedaDebounced])
+
+  // Paginación
+  const totalPaginas = Math.ceil(reparacionesFiltradas.length / itemsPorPagina)
+  const reparacionesPaginadas = useMemo(() => {
+    const inicio = (paginaActual - 1) * itemsPorPagina
+    const fin = inicio + itemsPorPagina
+    return reparacionesFiltradas.slice(inicio, fin)
+  }, [reparacionesFiltradas, paginaActual])
+
+  // Reset página cuando cambian los filtros
+  useEffect(() => {
+    setPaginaActual(1)
+  }, [filtros, busquedaDebounced])
 
   const getEstadoBadge = (estado: string) => {
     const badges: Record<string, { bg: string; text: string; label: string }> = {
@@ -327,8 +347,19 @@ export default function ReparacionesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div>
+        <PageHeader title="Reparaciones" gradient="blue" />
+        <div className="mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 space-y-4">
+            <div className="h-10 bg-slate-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div className="hidden lg:block">
+          <TableSkeleton rows={10} columns={10} />
+        </div>
+        <div className="lg:hidden">
+          <CardSkeleton count={5} />
+        </div>
       </div>
     )
   }
@@ -398,7 +429,7 @@ export default function ReparacionesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {reparacionesFiltradas.length === 0 ? (
+              {reparacionesPaginadas.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-6 py-12 text-center text-slate-500">
                     {filtros.busqueda || filtros.estado !== 'todos' ? (
@@ -412,7 +443,7 @@ export default function ReparacionesPage() {
                   </td>
                 </tr>
               ) : (
-                reparacionesFiltradas.map((reparacion) => (
+                reparacionesPaginadas.map((reparacion) => (
                   <tr key={reparacion.id} className="hover:bg-slate-50 transition">
                     <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-slate-900">
                       #{reparacion.numero_comprobante.toString().padStart(6, '0')}
@@ -582,7 +613,7 @@ export default function ReparacionesPage() {
 
       {/* Lista de reparaciones - Vista Mobile (Cards) */}
       <div className="lg:hidden space-y-4">
-        {reparacionesFiltradas.length === 0 ? (
+        {reparacionesPaginadas.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center text-slate-500">
             {filtros.busqueda || filtros.estado !== 'todos' ? (
               <div className="space-y-2">
@@ -594,7 +625,7 @@ export default function ReparacionesPage() {
             )}
           </div>
         ) : (
-          reparacionesFiltradas.map((reparacion) => (
+          reparacionesPaginadas.map((reparacion) => (
             <div key={reparacion.id} className="bg-white rounded-lg shadow p-4 space-y-3">
               {/* Header del Card */}
               <div className="flex items-start justify-between">
@@ -711,6 +742,71 @@ export default function ReparacionesPage() {
           ))
         )}
       </div>
+
+      {/* Controles de paginación */}
+      {totalPaginas > 1 && (
+        <div className="mt-6 flex items-center justify-between bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-slate-600">
+            Mostrando {((paginaActual - 1) * itemsPorPagina) + 1} - {Math.min(paginaActual * itemsPorPagina, reparacionesFiltradas.length)} de {reparacionesFiltradas.length} resultados
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setPaginaActual(prev => Math.max(1, prev - 1))}
+              disabled={paginaActual === 1}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition ${
+                paginaActual === 1
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Anterior</span>
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+                .filter(page => {
+                  // Mostrar siempre primera, última, actual y vecinas
+                  return page === 1 || 
+                         page === totalPaginas || 
+                         Math.abs(page - paginaActual) <= 1
+                })
+                .map((page, index, array) => {
+                  // Agregar separador si hay salto
+                  const showSeparator = index > 0 && page - array[index - 1] > 1
+                  return (
+                    <div key={page} className="flex items-center space-x-1">
+                      {showSeparator && <span className="text-slate-400">...</span>}
+                      <button
+                        onClick={() => setPaginaActual(page)}
+                        className={`w-8 h-8 rounded-lg font-medium transition ${
+                          paginaActual === page
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </div>
+                  )
+                })}
+            </div>
+
+            <button
+              onClick={() => setPaginaActual(prev => Math.min(totalPaginas, prev + 1))}
+              disabled={paginaActual === totalPaginas}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition ${
+                paginaActual === totalPaginas
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Agregar Reparación */}
       {showModal && (

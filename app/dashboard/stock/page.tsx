@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, X, Package, FileText, Barcode, ScanBarcode } from 'lucide-react'
 import type { Contenedor, ItemStock, ContenedorFormData, UbicacionStock, MonedaStock } from '@/types/database'
 import { generarPDFStock } from '@/lib/pdf-stock'
 import PageHeader from '@/components/PageHeader'
 import BarcodeGenerator from '@/components/BarcodeGenerator'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export default function StockPage() {
   const [tabActivo, setTabActivo] = useState<UbicacionStock>('adelante')
@@ -29,6 +30,9 @@ export default function StockPage() {
   const [editingItem, setEditingItem] = useState<{contenedor: Contenedor, item: ItemStock, index: number} | null>(null)
   const [filtroBusqueda, setFiltroBusqueda] = useState('')
   
+  // Aplicar debounce a la búsqueda para optimizar performance
+  const busquedaDebounced = useDebounce(filtroBusqueda, 300)
+  
   const supabase = createClient()
 
   const fetchContenedores = async () => {
@@ -49,22 +53,24 @@ export default function StockPage() {
     setLoading(false)
   }
 
-  // Filtrar contenedores por nombre o items
-  const contenedoresFiltrados = contenedores.filter(contenedor => {
-    if (!filtroBusqueda.trim()) return true
+  // Filtrar contenedores por nombre o items (usando debounce)
+  const contenedoresFiltrados = useMemo(() => {
+    if (!busquedaDebounced.trim()) return contenedores
     
-    const busqueda = filtroBusqueda.toLowerCase()
+    const busqueda = busquedaDebounced.toLowerCase()
     
-    // Buscar en nombre del contenedor
-    if (contenedor.nombre.toLowerCase().includes(busqueda)) {
-      return true
-    }
-    
-    // Buscar en items del contenedor
-    return contenedor.items.some((item: ItemStock) => 
-      item.detalle.toLowerCase().includes(busqueda)
-    )
-  })
+    return contenedores.filter(contenedor => {
+      // Buscar en nombre del contenedor
+      if (contenedor.nombre.toLowerCase().includes(busqueda)) {
+        return true
+      }
+      
+      // Buscar en items del contenedor
+      return contenedor.items.some((item: ItemStock) => 
+        item.detalle.toLowerCase().includes(busqueda)
+      )
+    })
+  }, [contenedores, busquedaDebounced])
 
   useEffect(() => {
     fetchContenedores()

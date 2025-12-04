@@ -82,6 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 alt="Logo" 
                 width={48} 
                 height={48}
+                loading="lazy"
                 className="rounded-lg object-cover flex-shrink-0"
               />
               {config.nombre_local && (
@@ -186,6 +187,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     alt="Logo" 
                     width={48} 
                     height={48}
+                    loading="lazy"
                     className="rounded-lg object-cover flex-shrink-0"
                   />
                   {config.nombre_local && (
