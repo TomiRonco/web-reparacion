@@ -10,6 +10,8 @@ import FiltroReparaciones, { FiltrosReparacion } from '@/components/FiltroRepara
 import PageHeader from '@/components/PageHeader'
 import { useDebounce } from '@/hooks/useDebounce'
 import { TableSkeleton, CardSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
+import { Badge } from '@/components/Badge'
 
 export default function ReparacionesPage() {
   const [reparaciones, setReparaciones] = useState<Reparacion[]>([])
@@ -33,6 +35,7 @@ export default function ReparacionesPage() {
   const busquedaDebounced = useDebounce(filtros.busqueda, 300)
   
   const supabase = createClient()
+  const { showToast } = useToast()
 
   const fetchData = async () => {
     setLoading(true)
@@ -113,7 +116,7 @@ export default function ReparacionesPage() {
       .single()
 
     if (error) {
-      alert('Error al crear la reparación')
+      showToast('error', 'Error al crear la reparación')
       return
     }
 
@@ -181,7 +184,7 @@ export default function ReparacionesPage() {
       .eq('id', selectedReparacion.id)
 
     if (error) {
-      alert('Error al actualizar la reparación')
+      showToast('error', 'Error al actualizar la reparación')
       return
     }
 
@@ -215,7 +218,7 @@ export default function ReparacionesPage() {
       .eq('id', selectedReparacion.id)
 
     if (error) {
-      alert('Error al guardar las notas')
+      showToast('error', 'Error al guardar las notas')
       return
     }
 
@@ -241,7 +244,7 @@ export default function ReparacionesPage() {
       .eq('id', reparacionId)
 
     if (error) {
-      alert('Error al actualizar el celular')
+      showToast('error', 'Error al actualizar el celular')
       return
     }
 
@@ -268,7 +271,7 @@ export default function ReparacionesPage() {
       .eq('id', id)
 
     if (error) {
-      alert('Error al cambiar el estado')
+      showToast('error', 'Error al cambiar el estado')
       return
     }
 
@@ -331,18 +334,14 @@ export default function ReparacionesPage() {
   }, [filtros, busquedaDebounced])
 
   const getEstadoBadge = (estado: string) => {
-    const badges: Record<string, { bg: string; text: string; label: string }> = {
-      pendiente: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
-      en_proceso: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'En Proceso' },
-      finalizada: { bg: 'bg-green-100', text: 'text-green-800', label: 'Finalizada' },
-      entregada: { bg: 'bg-slate-100', text: 'text-slate-800', label: 'Entregada' }
+    const estadosMap: Record<string, { variant: 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'default'; label: string; pulse: boolean }> = {
+      pendiente: { variant: 'pendiente', label: 'Pendiente', pulse: true },
+      en_proceso: { variant: 'en_proceso', label: 'En Proceso', pulse: true },
+      finalizada: { variant: 'completado', label: 'Finalizada', pulse: false },
+      entregada: { variant: 'entregado', label: 'Entregada', pulse: false }
     }
-    const badge = badges[estado] || badges.pendiente
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
-        {badge.label}
-      </span>
-    )
+    const config = estadosMap[estado] || estadosMap.pendiente
+    return <Badge variant={config.variant} text={config.label} withPulse={config.pulse} />
   }
 
   if (loading) {
@@ -811,7 +810,6 @@ export default function ReparacionesPage() {
       {/* Modal Agregar Reparación */}
       {showModal && (
         <ModalAgregarReparacion
-          tecnicos={tecnicos}
           onClose={() => setShowModal(false)}
           onSubmit={handleAgregarReparacion}
         />
@@ -827,6 +825,7 @@ export default function ReparacionesPage() {
             setSelectedReparacion(null)
           }}
           onSubmit={handleAgregarDiagnostico}
+          showToast={showToast}
         />
       )}
 
@@ -847,11 +846,9 @@ export default function ReparacionesPage() {
 
 // Modal para agregar reparación
 function ModalAgregarReparacion({
-  tecnicos,
   onClose,
   onSubmit
 }: {
-  tecnicos: Tecnico[]
   onClose: () => void
   onSubmit: (data: ReparacionFormData) => void
 }) {
@@ -1032,12 +1029,14 @@ function ModalDiagnostico({
   reparacion,
   tecnicos,
   onClose,
-  onSubmit
+  onSubmit,
+  showToast
 }: {
   reparacion: Reparacion
   tecnicos: Tecnico[]
   onClose: () => void
   onSubmit: (data: DiagnosticoFormData) => void
+  showToast: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void
 }) {
   const [formData, setFormData] = useState<DiagnosticoFormData>({
     diagnostico: reparacion.diagnostico || '',
@@ -1056,11 +1055,11 @@ function ModalDiagnostico({
 
   const agregarRepuesto = () => {
     if (!nuevoRepuesto.detalle.trim()) {
-      alert('Ingresa un detalle para el repuesto')
+      showToast('warning', 'Ingresa un detalle para el repuesto')
       return
     }
     if (nuevoRepuesto.precio <= 0) {
-      alert('El precio debe ser mayor a 0')
+      showToast('warning', 'El precio debe ser mayor a 0')
       return
     }
     
@@ -1088,7 +1087,7 @@ function ModalDiagnostico({
     e.preventDefault()
     
     if (!formData.tecnico_id) {
-      alert('Debes seleccionar un técnico')
+      showToast('warning', 'Debes seleccionar un técnico')
       return
     }
     
