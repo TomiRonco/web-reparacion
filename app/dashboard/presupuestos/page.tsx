@@ -7,9 +7,11 @@ import { generarPDFPresupuesto } from '@/lib/pdf-presupuesto'
 import type { Presupuesto, PresupuestoItem, ConfiguracionLocal } from '@/types/database'
 import { Plus, X, Download, Trash2, Edit } from 'lucide-react'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function PresupuestosPage() {
   const supabase = createClient()
+  const { showToast } = useToast()
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
@@ -111,7 +113,7 @@ export default function PresupuestosPage() {
       // Validar que haya al menos un item con detalle
       const itemsValidos = items.filter(item => item.detalle.trim() !== '')
       if (itemsValidos.length === 0) {
-        alert('Debe agregar al menos un item con detalle')
+        showToast('warning', 'Debe agregar al menos un item con detalle')
         return
       }
 
@@ -134,11 +136,11 @@ export default function PresupuestosPage() {
 
         if (error) {
           console.error('Error al actualizar presupuesto:', error)
-          alert('Error al actualizar el presupuesto')
+          showToast('error', 'Error al actualizar el presupuesto')
           return
         }
 
-        alert('Presupuesto actualizado exitosamente')
+        showToast('success', 'Presupuesto actualizado exitosamente')
       } else {
         // Crear nuevo presupuesto
         // Obtener el siguiente número de presupuesto
@@ -172,11 +174,11 @@ export default function PresupuestosPage() {
 
         if (error) {
           console.error('Error al guardar presupuesto:', error)
-          alert('Error al guardar el presupuesto')
+          showToast('error', 'Error al guardar el presupuesto')
           return
         }
 
-        alert('Presupuesto guardado exitosamente')
+        showToast('success', 'Presupuesto guardado exitosamente')
       }
 
       // Limpiar formulario
@@ -189,7 +191,7 @@ export default function PresupuestosPage() {
       setModalAbierto(false)
     } catch (error) {
       console.error('Error:', error)
-      alert('Error al procesar el presupuesto')
+      showToast('error', 'Error al procesar el presupuesto')
     }
   }
 
@@ -232,7 +234,7 @@ export default function PresupuestosPage() {
 
     if (error) {
       console.error('Error al eliminar presupuesto:', error)
-      alert('Error al eliminar el presupuesto')
+      showToast('error', 'Error al eliminar el presupuesto')
       return
     }
 

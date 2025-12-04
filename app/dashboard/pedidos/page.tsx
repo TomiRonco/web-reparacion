@@ -6,15 +6,16 @@ import { Plus, Edit2, Trash2, X, ShoppingCart, CheckCircle, Circle } from 'lucid
 import type { Pedido, ItemPedido, PedidoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function PedidosPage() {
+  const supabase = createClient()
+  const { showToast } = useToast()
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingPedido, setEditingPedido] = useState<Pedido | null>(null)
   const [filtro, setFiltro] = useState<'todos' | 'pendientes' | 'completados'>('todos')
-  
-  const supabase = createClient()
 
   const fetchPedidos = async () => {
     setLoading(true)
@@ -53,7 +54,7 @@ export default function PedidosPage() {
         .eq('id', editingPedido.id)
 
       if (error) {
-        alert('Error al actualizar el pedido')
+        showToast('error', 'Error al actualizar el pedido')
         return
       }
     } else {
@@ -68,7 +69,7 @@ export default function PedidosPage() {
         })
 
       if (error) {
-        alert('Error al crear el pedido')
+        showToast('error', 'Error al crear el pedido')
         return
       }
     }
@@ -87,7 +88,7 @@ export default function PedidosPage() {
       .eq('id', id)
 
     if (error) {
-      alert('Error al eliminar el pedido')
+      showToast('error', 'Error al eliminar el pedido')
       return
     }
 
@@ -347,11 +348,11 @@ function ModalPedido({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.proveedor.trim()) {
-      alert('El nombre del proveedor es obligatorio')
+      showToast('warning', 'El nombre del proveedor es obligatorio')
       return
     }
     if (formData.items.length === 0) {
-      alert('Debes agregar al menos un item')
+      showToast('warning', 'Debes agregar al menos un item')
       return
     }
     onSubmit(formData)

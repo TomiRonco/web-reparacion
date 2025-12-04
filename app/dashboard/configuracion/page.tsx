@@ -7,9 +7,11 @@ import type { ConfiguracionLocal } from '@/types/database'
 import Image from 'next/image'
 import PageHeader from '@/components/PageHeader'
 import { CardSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function ConfiguracionPage() {
-  const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
+  const supabase = createClient()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -87,7 +89,7 @@ export default function ConfiguracionPage() {
         })
 
       if (uploadError) {
-        alert('Error al subir el logo')
+        showToast('error', 'Error al subir el logo')
         console.error(uploadError)
         setUploadingLogo(false)
         return
@@ -123,7 +125,7 @@ export default function ConfiguracionPage() {
           .eq('user_id', user.id)
 
         if (error) {
-          alert('Error al actualizar la configuración')
+          showToast('error', 'Error al actualizar la configuración')
           console.error(error)
           setSaving(false)
           return
@@ -138,7 +140,7 @@ export default function ConfiguracionPage() {
           })
 
         if (error) {
-          alert('Error al guardar la configuración')
+          showToast('error', 'Error al guardar la configuración')
           console.error(error)
           setSaving(false)
           return
@@ -146,10 +148,10 @@ export default function ConfiguracionPage() {
       }
 
       await fetchConfig()
-      alert('Configuración guardada exitosamente')
+      showToast('success', 'Configuración guardada exitosamente')
       setSaving(false)
     } catch (error) {
-      alert('Error al guardar')
+      showToast('error', 'Error al guardar')
       console.error(error)
       setSaving(false)
     }

@@ -6,9 +6,11 @@ import { Plus, Edit2, Trash2, X } from 'lucide-react'
 import type { Tecnico, TecnicoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { CardSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function TecnicosPage() {
-  const [tecnicos, setTecnicos] = useState<Tecnico[]>([])
+  const supabase = createClient()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
@@ -50,7 +52,7 @@ export default function TecnicosPage() {
       })
 
     if (error) {
-      alert('Error al crear el técnico')
+      showToast('error', 'Error al crear el técnico')
       return
     }
 
@@ -67,7 +69,7 @@ export default function TecnicosPage() {
       .eq('id', editingTecnico.id)
 
     if (error) {
-      alert('Error al actualizar el técnico')
+      showToast('error', 'Error al actualizar el técnico')
       return
     }
 
@@ -87,7 +89,7 @@ export default function TecnicosPage() {
       .eq('id', id)
 
     if (error) {
-      alert('Error al eliminar el técnico. Puede que tenga reparaciones asignadas.')
+      showToast('error', 'Error al eliminar el técnico. Puede que tenga reparaciones asignadas.')
       return
     }
 

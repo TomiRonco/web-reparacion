@@ -8,16 +8,17 @@ import * as XLSX from 'xlsx'
 import { generarPDFCajaDiaria } from '@/lib/pdf-caja-diaria'
 import type { ConfiguracionLocal } from '@/types/database'
 import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function CajaDiariaPage() {
+  const supabase = createClient()
+  const { showToast } = useToast()
   const [transacciones, setTransacciones] = useState<TransaccionCaja[]>([])
   const [loading, setLoading] = useState(true)
   const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split('T')[0])
   const [monto, setMonto] = useState<string>('')
   const [detalle, setDetalle] = useState('')
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
-
-  const supabase = createClient()
 
   useEffect(() => {
     fetchTransacciones()
@@ -86,7 +87,7 @@ export default function CajaDiariaPage() {
 
     const montoNum = Number(monto)
     if (!detalle.trim() || montoNum <= 0) {
-      alert('Por favor completa todos los campos correctamente')
+      showToast('warning', 'Por favor completa todos los campos correctamente')
       return
     }
 
@@ -101,7 +102,7 @@ export default function CajaDiariaPage() {
 
     if (error) {
       console.error('Error al guardar transacción:', error)
-      alert('Error al guardar la transacción')
+      showToast('error', 'Error al guardar la transacción')
       return
     }
 
@@ -129,7 +130,7 @@ export default function CajaDiariaPage() {
 
     if (error) {
       console.error('Error al marcar caja:', error)
-      alert('Error al marcar el cierre de caja')
+      showToast('error', 'Error al marcar el cierre de caja')
       return
     }
 
