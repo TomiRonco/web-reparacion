@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Menú de Navegación */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-2 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -118,43 +118,43 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 key={item.href}
                 onClick={() => router.push(item.href)}
-                className={`w-full flex items-center justify-center group-hover:justify-start px-4 py-3 rounded-lg transition-all ${
+                className={`w-full flex items-center px-3 py-3 rounded-lg transition-all group-hover:px-4 ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 font-medium'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
                 title={item.name}
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">{item.name}</span>
+                <Icon className="w-5 h-5 shrink-0 mx-auto group-hover:mx-0" />
+                <span className="hidden group-hover:inline-block ml-3 whitespace-nowrap">{item.name}</span>
               </button>
             )
           })}
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex flex-col space-y-2">
+        <div className="p-2 border-t border-slate-200">
+          <div className="flex flex-col space-y-1">
             <button
               onClick={() => router.push('/dashboard/configuracion')}
-              className={`flex items-center justify-center group-hover:justify-start px-4 py-3 rounded-lg transition-all ${
+              className={`flex items-center px-3 py-3 rounded-lg transition-all group-hover:px-4 ${
                 pathname === '/dashboard/configuracion'
                   ? 'bg-blue-50 text-blue-700 font-medium'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
               title="Configuración"
             >
-              <Settings className="w-5 h-5 shrink-0" />
-              <span className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Configuración</span>
+              <Settings className="w-5 h-5 shrink-0 mx-auto group-hover:mx-0" />
+              <span className="hidden group-hover:inline-block ml-3 whitespace-nowrap">Configuración</span>
             </button>
             
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center group-hover:justify-start px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all"
+              className="flex items-center px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all group-hover:px-4"
               title="Cerrar Sesión"
             >
-              <LogOut className="w-5 h-5 shrink-0" />
-              <span className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Cerrar Sesión</span>
+              <LogOut className="w-5 h-5 shrink-0 mx-auto group-hover:mx-0" />
+              <span className="hidden group-hover:inline-block ml-3 whitespace-nowrap">Cerrar Sesión</span>
             </button>
           </div>
         </div>
