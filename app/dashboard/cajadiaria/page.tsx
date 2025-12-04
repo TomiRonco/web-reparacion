@@ -24,18 +24,16 @@ export default function CajaDiariaPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Filtrar por día seleccionado
-    const fechaInicio = new Date(fechaFiltro)
-    fechaInicio.setHours(0, 0, 0, 0)
-    const fechaFin = new Date(fechaFiltro)
-    fechaFin.setHours(23, 59, 59, 999)
+    // Filtrar por día seleccionado usando el timezone local
+    const fechaInicio = `${fechaFiltro}T00:00:00`
+    const fechaFin = `${fechaFiltro}T23:59:59`
 
     const { data, error } = await supabase
       .from('transacciones_caja')
       .select('*')
       .eq('user_id', user.id)
-      .gte('fecha_hora', fechaInicio.toISOString())
-      .lte('fecha_hora', fechaFin.toISOString())
+      .gte('fecha_hora', fechaInicio)
+      .lte('fecha_hora', fechaFin)
       .order('fecha_hora', { ascending: false })
 
     if (!error && data) {
