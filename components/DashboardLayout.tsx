@@ -74,9 +74,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex lg:flex-col w-20 hover:w-64 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out group overflow-hidden">
         {/* Header del Sidebar */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-center group-hover:justify-start min-h-[80px]">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-center group-hover:justify-start min-h-20">
           {config?.logo_url ? (
-            <div className="flex items-center space-x-3">
+            <>
               <Image 
                 src={config.logo_url} 
                 alt="Logo" 
@@ -86,25 +86,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="rounded-lg object-cover shrink-0"
               />
               {config.nombre_local && (
-                <h2 className="text-base font-bold text-slate-900 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">
+                <h2 className="ml-3 text-base font-bold text-slate-900 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">
                   {config.nombre_local}
                 </h2>
               )}
-            </div>
+            </>
           ) : config?.nombre_local ? (
-            <div className="flex items-center space-x-3">
+            <>
               <Wrench className="w-8 h-8 text-blue-600 shrink-0" />
-              <h2 className="text-lg font-bold text-slate-900 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">
+              <h2 className="ml-3 text-lg font-bold text-slate-900 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">
                 {config.nombre_local}
               </h2>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center space-x-2">
+            <>
               <Wrench className="w-8 h-8 text-blue-600 shrink-0" />
-              <h2 className="text-xl font-bold text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+              <h2 className="ml-2 text-xl font-bold text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                 Reparaciones
               </h2>
-            </div>
+            </>
           )}
         </div>
 
