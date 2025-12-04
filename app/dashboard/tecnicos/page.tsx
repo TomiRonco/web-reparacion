@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Users } from 'lucide-react'
 import type { Tecnico, TecnicoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { CardSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import { EmptyState } from '@/components/EmptyState'
+import { Button } from '@/components/Button'
 
 export default function TecnicosPage() {
   const supabase = createClient()
@@ -110,16 +112,16 @@ export default function TecnicosPage() {
         title="Técnicos"
         gradient="purple"
         actions={
-          <button
+          <Button
+            variant="primary"
+            icon={Plus}
             onClick={() => {
               setEditingTecnico(null)
               setShowModal(true)
             }}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50 transition shadow-md font-semibold"
           >
-            <Plus className="w-5 h-5" />
-            <span>Agregar Técnico</span>
-          </button>
+            Agregar Técnico
+          </Button>
         }
       />
 
@@ -146,16 +148,15 @@ export default function TecnicosPage() {
             <tbody className="bg-white divide-y divide-slate-200">
               {tecnicos.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
-                    <div className="space-y-2">
-                      <p className="text-lg font-medium">No hay técnicos registrados</p>
-                      <button
-                        onClick={() => setShowModal(true)}
-                        className="text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Agregar el primer técnico
-                      </button>
-                    </div>
+                  <td colSpan={4}>
+                    <EmptyState
+                      icon={Users}
+                      title="No hay técnicos registrados"
+                      description="Agrega tu primer técnico para comenzar a asignar reparaciones"
+                      actionLabel="Agregar Técnico"
+                      actionIcon={Plus}
+                      onAction={() => setShowModal(true)}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -284,15 +285,18 @@ function ModalTecnico({
   onClose: () => void
   onSubmit: (data: TecnicoFormData) => void
 }) {
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<TecnicoFormData>({
     nombre: tecnico?.nombre || '',
     apellido: tecnico?.apellido || '',
     celular: tecnico?.celular || ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    setLoading(true)
+    await onSubmit(formData)
+    setLoading(false)
   }
 
   return (
@@ -349,19 +353,20 @@ function ModalTecnico({
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition"
+              disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              loading={loading}
             >
               {tecnico ? 'Actualizar' : 'Agregar'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

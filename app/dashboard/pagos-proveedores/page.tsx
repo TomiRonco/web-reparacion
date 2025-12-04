@@ -8,6 +8,9 @@ import PageHeader from '@/components/PageHeader'
 import { generarPDFPagosProveedor } from '@/lib/pdf-pagos-proveedores'
 import { GridSkeleton, CardSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import { EmptyState } from '@/components/EmptyState'
+import { Button } from '@/components/Button'
+import { Badge } from '@/components/Badge'
 
 export default function PagosProveedoresPage() {
   const supabase = createClient()
@@ -237,17 +240,15 @@ export default function PagosProveedoresPage() {
 
       {proveedores.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow p-12 text-center max-w-md">
-            <Receipt className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No hay proveedores</h3>
-            <p className="text-slate-500 mb-6">Crea tu primer proveedor para comenzar a gestionar pagos y deudas</p>
-            <button
-              onClick={() => setShowModalProveedor(true)}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Crear Proveedor</span>
-            </button>
+          <div className="bg-white rounded-lg shadow max-w-md">
+            <EmptyState
+              icon={Receipt}
+              title="No hay proveedores"
+              description="Crea tu primer proveedor para comenzar a gestionar pagos y deudas"
+              actionLabel="Crear Proveedor"
+              actionIcon={Plus}
+              onAction={() => setShowModalProveedor(true)}
+            />
           </div>
         </div>
       ) : (
@@ -432,19 +433,11 @@ export default function PagosProveedoresPage() {
                                 {comp.tipo === 'nota_credito' ? '-' : ''}${comp.monto.toFixed(2)} {comp.moneda}
                               </td>
                               <td className="px-4 py-3 text-center">
-                                {comp.pagado ? (
-                                  <span className="inline-flex items-center space-x-1 text-green-600">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span className="text-xs font-medium">
-                                      {comp.tipo === 'nota_credito' ? 'Aplicada' : 'Pagado'}
-                                    </span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center space-x-1 text-orange-600">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="text-xs font-medium">Pendiente</span>
-                                  </span>
-                                )}
+                                <Badge
+                                  variant={comp.pagado ? 'pagado' : 'pendiente'}
+                                  text={comp.pagado ? (comp.tipo === 'nota_credito' ? 'Aplicada' : 'Pagado') : 'Pendiente'}
+                                  withPulse={!comp.pagado}
+                                />
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <div className="flex items-center justify-center space-x-2">

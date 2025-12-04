@@ -5,9 +5,11 @@ import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { generarPDFPresupuesto } from '@/lib/pdf-presupuesto'
 import type { Presupuesto, PresupuestoItem, ConfiguracionLocal } from '@/types/database'
-import { Plus, X, Download, Trash2, Edit } from 'lucide-react'
+import { Plus, X, Download, Trash2, Edit, FileText } from 'lucide-react'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import { EmptyState } from '@/components/EmptyState'
+import { Button } from '@/components/Button'
 
 export default function PresupuestosPage() {
   const supabase = createClient()
@@ -15,6 +17,7 @@ export default function PresupuestosPage() {
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [modalAbierto, setModalAbierto] = useState(false)
   const [presupuestoEditando, setPresupuestoEditando] = useState<Presupuesto | null>(null)
 
@@ -192,6 +195,8 @@ export default function PresupuestosPage() {
     } catch (error) {
       console.error('Error:', error)
       showToast('error', 'Error al procesar el presupuesto')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -256,13 +261,13 @@ export default function PresupuestosPage() {
         title="Presupuestos" 
         gradient="green"
         actions={
-          <button
+          <Button
+            variant="success"
+            icon={Plus}
             onClick={() => setModalAbierto(true)}
-            className="flex items-center space-x-2 bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition shadow-md font-semibold"
           >
-            <Plus className="w-5 h-5" />
-            <span>Nuevo Presupuesto</span>
-          </button>
+            Nuevo Presupuesto
+          </Button>
         }
       />
 
@@ -271,9 +276,14 @@ export default function PresupuestosPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Presupuestos Guardados</h2>
 
         {presupuestos.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">
-            No hay presupuestos guardados
-          </p>
+          <EmptyState
+            icon={FileText}
+            title="No hay presupuestos guardados"
+            description="Crea tu primer presupuesto para enviar a tus clientes"
+            actionLabel="Crear Presupuesto"
+            actionIcon={Plus}
+            onAction={() => setModalAbierto(true)}
+          />
         ) : (
           <>
             {/* Vista Desktop (Tabla) */}
@@ -678,18 +688,20 @@ export default function PresupuestosPage() {
 
             {/* Footer con botones */}
             <div className="p-6 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50">
-              <button
+              <Button
+                variant="secondary"
                 onClick={limpiarFormulario}
-                className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                disabled={saving}
               >
                 Limpiar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
                 onClick={guardarPresupuesto}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                loading={saving}
               >
                 {presupuestoEditando ? 'Actualizar Presupuesto' : 'Guardar Presupuesto'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

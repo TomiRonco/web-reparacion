@@ -7,6 +7,9 @@ import type { Pedido, ItemPedido, PedidoFormData } from '@/types/database'
 import PageHeader from '@/components/PageHeader'
 import { GridSkeleton } from '@/components/LoadingSkeletons'
 import { useToast } from '@/components/Toast'
+import { EmptyState } from '@/components/EmptyState'
+import { Button } from '@/components/Button'
+import { Badge } from '@/components/Badge'
 
 export default function PedidosPage() {
   const supabase = createClient()
@@ -143,16 +146,16 @@ export default function PedidosPage() {
           title="Gestión de Pedidos"
           gradient="blue"
           actions={
-            <button
+            <Button
+              variant="primary"
+              icon={Plus}
               onClick={() => {
                 setEditingPedido(null)
                 setShowModal(true)
               }}
-              className="flex items-center space-x-2 bg-white text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50 transition shadow-md font-semibold text-sm"
             >
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Pedido</span>
-            </button>
+              Nuevo Pedido
+            </Button>
           }
         />
 
@@ -200,17 +203,15 @@ export default function PedidosPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {pedidosFiltrados.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <ShoppingCart className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No hay pedidos</h3>
-              <p className="text-slate-500 mb-6">Crea tu primer pedido para comenzar a gestionar tus compras</p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Crear Pedido</span>
-              </button>
+            <div className="bg-white rounded-lg shadow">
+              <EmptyState
+                icon={ShoppingCart}
+                title="No hay pedidos"
+                description="Crea tu primer pedido para comenzar a gestionar tus compras"
+                actionLabel="Crear Pedido"
+                actionIcon={Plus}
+                onAction={() => setShowModal(true)}
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -230,33 +231,40 @@ export default function PedidosPage() {
                         <ShoppingCart className="w-5 h-5" />
                         <h3 className="text-lg font-bold">{pedido.proveedor}</h3>
                       </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleToggleCompletado(pedido)}
-                          className="p-1.5 hover:bg-blue-400 rounded transition"
-                          title={pedido.completado ? 'Marcar como pendiente' : 'Marcar como completado'}
-                        >
-                          {pedido.completado ? <CheckCircle className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                        </button>
-                        {!pedido.completado && (
+                      <div className="flex items-center space-x-2">
+                        <Badge
+                          variant={pedido.completado ? 'completado' : 'pendiente'}
+                          text={pedido.completado ? 'Completado' : 'Pendiente'}
+                          withPulse={!pedido.completado}
+                        />
+                        <div className="flex space-x-1">
                           <button
-                            onClick={() => {
-                              setEditingPedido(pedido)
-                              setShowModal(true)
-                            }}
+                            onClick={() => handleToggleCompletado(pedido)}
                             className="p-1.5 hover:bg-blue-400 rounded transition"
-                            title="Editar"
+                            title={pedido.completado ? 'Marcar como pendiente' : 'Marcar como completado'}
                           >
-                            <Edit2 className="w-4 h-4" />
+                            {pedido.completado ? <CheckCircle className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleEliminarPedido(pedido.id)}
-                          className="p-1.5 hover:bg-red-400 rounded transition"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          {!pedido.completado && (
+                            <button
+                              onClick={() => {
+                                setEditingPedido(pedido)
+                                setShowModal(true)
+                              }}
+                              className="p-1.5 hover:bg-blue-400 rounded transition"
+                              title="Editar"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEliminarPedido(pedido.id)}
+                            className="p-1.5 hover:bg-red-400 rounded transition"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -316,6 +324,8 @@ function ModalPedido({
   onClose: () => void
   onSubmit: (data: PedidoFormData) => void
 }) {
+  const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
   const [formData, setFormData] = useState<PedidoFormData>({
     proveedor: pedido?.proveedor || '',
     items: pedido?.items || []
@@ -345,7 +355,7 @@ function ModalPedido({
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.proveedor.trim()) {
       showToast('warning', 'El nombre del proveedor es obligatorio')
@@ -355,7 +365,9 @@ function ModalPedido({
       showToast('warning', 'Debes agregar al menos un item')
       return
     }
-    onSubmit(formData)
+    setLoading(true)
+    await onSubmit(formData)
+    setLoading(false)
   }
 
   return (
@@ -451,19 +463,20 @@ function ModalPedido({
 
           {/* Botones de acción */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={onClose}
-              className="px-6 py-2 border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium"
+              disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              loading={loading}
             >
               {pedido ? 'Guardar Cambios' : 'Crear Pedido'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
