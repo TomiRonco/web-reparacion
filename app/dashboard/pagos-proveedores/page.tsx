@@ -7,8 +7,11 @@ import type { ProveedorPago, Comprobante, PagoRealizado, ComprobanteFormData, Pa
 import PageHeader from '@/components/PageHeader'
 import { generarPDFPagosProveedor } from '@/lib/pdf-pagos-proveedores'
 import { GridSkeleton, CardSkeleton } from '@/components/LoadingSkeletons'
+import { useToast } from '@/components/Toast'
 
 export default function PagosProveedoresPage() {
+  const supabase = createClient()
+  const { showToast } = useToast()
   const [proveedores, setProveedores] = useState<ProveedorPago[]>([])
   const [proveedorActivo, setProveedorActivo] = useState<string | null>(null)
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([])
@@ -21,8 +24,6 @@ export default function PagosProveedoresPage() {
   const [editingComprobante, setEditingComprobante] = useState<Comprobante | null>(null)
   const [nombreProveedor, setNombreProveedor] = useState('')
   const [config, setConfig] = useState<ConfiguracionLocal | null>(null)
-  
-  const supabase = createClient()
 
   const fetchProveedores = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -110,7 +111,7 @@ export default function PagosProveedoresPage() {
 
   const handleGuardarProveedor = async () => {
     if (!nombreProveedor.trim()) {
-      alert('El nombre del proveedor es obligatorio')
+      showToast('warning', 'El nombre del proveedor es obligatorio')
       return
     }
 
@@ -124,7 +125,7 @@ export default function PagosProveedoresPage() {
         .eq('id', editingProveedor.id)
 
       if (error) {
-        alert('Error al actualizar el proveedor')
+        showToast('error', 'Error al actualizar el proveedor')
         return
       }
     } else {
@@ -137,7 +138,7 @@ export default function PagosProveedoresPage() {
         })
 
       if (error) {
-        alert('Error al crear el proveedor')
+        showToast('error', 'Error al crear el proveedor')
         return
       }
     }
@@ -157,7 +158,7 @@ export default function PagosProveedoresPage() {
       .eq('id', id)
 
     if (error) {
-      alert('Error al eliminar el proveedor')
+      showToast('error', 'Error al eliminar el proveedor')
       return
     }
 
@@ -686,7 +687,7 @@ function ModalComprobante({
     e.preventDefault()
     
     if (!formData.numero.trim() || formData.monto <= 0) {
-      alert('Completa todos los campos obligatorios')
+      showToast('warning', 'Completa todos los campos obligatorios')
       return
     }
 
@@ -700,7 +701,7 @@ function ModalComprobante({
         .eq('id', comprobante.id)
 
       if (error) {
-        alert('Error al actualizar el comprobante')
+        showToast('error', 'Error al actualizar el comprobante')
         return
       }
     } else {
@@ -713,7 +714,7 @@ function ModalComprobante({
         })
 
       if (error) {
-        alert('Error al crear el comprobante')
+        showToast('error', 'Error al crear el comprobante')
         return
       }
     }
@@ -871,12 +872,12 @@ function ModalPago({
     e.preventDefault()
 
     if (formData.comprobante_ids.length === 0) {
-      alert('Selecciona al menos un comprobante')
+      showToast('warning', 'Selecciona al menos un comprobante')
       return
     }
 
     if (formData.monto_pagado <= 0) {
-      alert('El monto debe ser mayor a 0')
+      showToast('warning', 'El monto debe ser mayor a 0')
       return
     }
 
@@ -897,7 +898,7 @@ function ModalPago({
       })
 
     if (pagoError) {
-      alert('Error al registrar el pago')
+      showToast('error', 'Error al registrar el pago')
       return
     }
 
